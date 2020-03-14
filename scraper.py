@@ -57,7 +57,7 @@ def get_data(cmd):
 
         data.append(row)
 
-    if cmd == 'world':
+    if cmd == 'World':
         return [total_confirmed, total_death, total_recoverd]
     elif cmd == 'getall':
         return data
@@ -85,6 +85,7 @@ def get_html():
     return df.render()
 
 
+# TODO: this is broken in LINE!!!
 def get_table(cmd):
     data = get_data(cmd)  # [Confirmed, Deaths, Recovered]
     confirm = data[0]

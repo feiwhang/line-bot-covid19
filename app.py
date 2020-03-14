@@ -1,6 +1,5 @@
-import io
-from line_command import output
 from scraper import get_html
+from line_command import output
 from flask import Flask, abort, request
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
@@ -9,9 +8,9 @@ from linebot.models import MessageEvent, TextMessage, TextSendMessage, ImageMess
 
 app = Flask(__name__)
 
-with open("keys/Channel_access_token.txt", "r") as file:
+with open("keys/channel_access_token.txt", "r") as file:
     channel_access_token = file.read()
-with open("keys/Channel_secret.txt", "r") as file:
+with open("keys/channel_secret.txt", "r") as file:
     channel_secret = file.read()
 
 line_bot_api = LineBotApi(channel_access_token)
@@ -42,11 +41,9 @@ def callback():
 def handle_message(event):
     input_message = event.message.text      # input message
 
-    cmd = command(input_message)
-
     output_message = output(input_message)
 
-    message = TextSendMessage(text=input_message)  # output message
+    message = TextSendMessage(text=output_message)  # output message
     line_bot_api.reply_message(event.reply_token, message)
 
 
