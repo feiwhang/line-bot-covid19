@@ -3,15 +3,12 @@ import numpy as np
 import pandas as pd
 from dateutil import tz
 from datetime import datetime
+from tabulate import tabulate
 from urllib.request import Request, urlopen
 
-from flask import Flask
 
-
-app = Flask(__name__)
-
-
-def get_data():
+# get data by country or all if country is not known
+def get_data(cmd):
     url = 'https://services9.arcgis.com/N9p5hsImWXAccRNI/arcgis/rest/services/Z7biAeD8PAkqgmWhxG2A/FeatureServer/2/query?f=json&where=Confirmed%20%3E%200&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&orderByFields=Confirmed%20desc&resultOffset=0&resultRecordCount=200&cacheHint=true'
 
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -53,13 +50,23 @@ def get_data():
 
         # crate new row & add to data list
         row = [country, confirmed, deaths, recovered, active, date]
+
+        # if user specified countru return just the country we need
+        if country == cmd:
+            return row[1:4]
+
         data.append(row)
 
-    return data
+    if cmd == 'world':
+        return [total_confirmed, total_death, total_recoverd]
+    elif cmd == 'getall':
+        return data
+    else:
+        raise Exception()
 
 
 def get_df():
-    data = get_data()
+    data = get_data('getall')
     # create a dataframe
     data_head = ['Country', 'Confirmed', 'Deaths',
                  'Recovered', 'Active', 'Lastest Update']
@@ -76,3 +83,16 @@ def get_html():
                                     'border-color': 'black'})
 
     return df.render()
+
+
+def get_table(cmd):
+    data = get_data(cmd)  # [Confirmed, Deaths, Recovered]
+    confirm = data[0]
+    death = data[1]
+    recov = data[2]
+
+    table_data = [['Confirmed', confirm], [
+        'Deaths', death], ['Recovered', recov]]
+    # create pretty table for visualization
+    table = tabulate(table_data, headers=['', cmd], tablefmt="fancy_grid")
+    return table

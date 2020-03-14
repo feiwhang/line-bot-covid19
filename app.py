@@ -1,5 +1,6 @@
 import io
-import scraper
+from line_command import output
+from scraper import get_html
 from flask import Flask, abort, request
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
@@ -19,7 +20,7 @@ handler = WebhookHandler(channel_secret)
 
 @app.route('/')
 def table():
-    return scraper.get_html()
+    return get_html()
 
 
 @app.route("/callback", methods=['POST'])
@@ -40,6 +41,10 @@ def callback():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     input_message = event.message.text      # input message
+
+    cmd = command(input_message)
+
+    output_message = output(input_message)
 
     message = TextSendMessage(text=input_message)  # output message
     line_bot_api.reply_message(event.reply_token, message)
