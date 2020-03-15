@@ -1,10 +1,13 @@
-from scraper import get_html
-from line_command import output
-from flask import Flask, abort, request
+import urllib3
+import requests
+from helper import statePage, countryPage
 from linebot import LineBotApi, WebhookHandler
-from linebot.exceptions import InvalidSignatureError
-from linebot.models import MessageEvent, TextMessage, TextSendMessage, ImageMessage
+from flask import Flask, abort, request, send_file
+from linebot.exceptions import InvalidSignatureError, LineBotApiError
+from linebot.models import MessageEvent, TextMessage, TextSendMessage, ImageSendMessage
 
+# have to disable warning due to a primitive version of ThailandPOST API
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
 
@@ -17,9 +20,19 @@ line_bot_api = LineBotApi(channel_access_token)
 handler = WebhookHandler(channel_secret)
 
 
-@app.route('/')
-def table():
-    return get_html()
+@app.route('/country')
+def country():
+    return countryPage()
+
+
+@app.route('/state')
+def state():
+    return statePage()
+
+
+@app.route("/image/<message_id>/<cmd>")
+def image(cmd):
+    return cmd
 
 
 @app.route("/callback", methods=['POST'])
@@ -40,11 +53,20 @@ def callback():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     input_message = event.message.text      # input message
+    message_id = event.message.id
 
-    output_message = output(input_message)
+    image_url = 'https://line-bot-covid19-ljnm7xnh6a-de.a.run.app/image/' + \
+        message_id + '/' + input_message
 
-    message = TextSendMessage(text=output_message)  # output message
-    line_bot_api.reply_message(event.reply_token, message)
+    image_message = ImageSendMessage(
+        original_content_url=image_url, preview_image_url=image_url)
+
+    try:
+        line_bot_api.reply_message(event.reply_token, image_message)
+    except LineBotApiError:
+        output_message = 'ไม่พบ {}'.format(input_message)
+        message = TextSendMessage(text=output_message)  # output message
+        line_bot_api.reply_message(event.reply_token, message)
 
 
 if __name__ == '__main__':

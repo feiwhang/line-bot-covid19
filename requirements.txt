@@ -1,5 +1,9 @@
+requests
+urllib3
 line-bot-sdk
 Flask
 pandas
 numpy
-tabulate
+timeago
+Pillow
+seaborn

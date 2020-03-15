@@ -1,99 +1,92 @@
 import json
+import timeago
 import numpy as np
 import pandas as pd
+import seaborn as sns
 from dateutil import tz
 from datetime import datetime
-from tabulate import tabulate
 from urllib.request import Request, urlopen
 
 
-# get data by country or all if country is not known
-def get_data(cmd):
-    url = 'https://services9.arcgis.com/N9p5hsImWXAccRNI/arcgis/rest/services/Z7biAeD8PAkqgmWhxG2A/FeatureServer/2/query?f=json&where=Confirmed%20%3E%200&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&orderByFields=Confirmed%20desc&resultOffset=0&resultRecordCount=200&cacheHint=true'
+class scraper:
+    def __init__(self, mode):
+        self.mode = mode
+        if self.mode == 'country':
+            self.data = {'Country': [], 'Confirmed': [], 'Deaths': [],
+                         'Recovered': [], 'Active': [], 'Lastest Update': []}
+            self.url = 'https://services9.arcgis.com/N9p5hsImWXAccRNI/arcgis/rest/services/Z7biAeD8PAkqgmWhxG2A/FeatureServer/2/query?f=json&where=Confirmed%20%3E%200&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&orderByFields=Confirmed%20desc&resultOffset=0&resultRecordCount=200&cacheHint=true'
+        elif self.mode == 'state':
+            self.data = {'State': [], 'Country': [], 'Confirmed': [], 'Deaths': [],
+                         'Recovered': [], 'Active': [], 'Lastest Update': []}
+            self.url = 'https://services9.arcgis.com/N9p5hsImWXAccRNI/arcgis/rest/services/Z7biAeD8PAkqgmWhxG2A/FeatureServer/1/query?f=json&where=Confirmed%20%3E%200&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&orderByFields=Confirmed%20desc,Country_Region%20asc,Province_State%20asc&resultOffset=0&resultRecordCount=250&cacheHint=true'
 
-    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        else:
+            raise Exception
 
-    # open up connection, grap the page
-    uClient = urlopen(req)
-    page_html = uClient.read()
-    uClient.close()  # close connection
+    def parser(self):
+        req = Request(self.url, headers={'User-Agent': 'Mozilla/5.0'})
 
-    # load data to json format for easy accessing
-    page = json.loads(page_html)
+        # open up connection, grap the page
+        uClient = urlopen(req)
+        page_html = uClient.read()
+        uClient.close()  # close connection
 
-    # create a data list for numpy array
-    data = []
-    # Cumulative Total Count
-    total_confirmed = 0
-    total_death = 0
-    total_recoverd = 0
+        # load data to json format for easy accessing
+        page = json.loads(page_html)
+        return page
 
-    for feature in page['features']:
-        country = feature['attributes']['Country_Region']
-        confirmed = feature['attributes']['Confirmed']
-        deaths = feature['attributes']['Deaths']
-        recovered = feature['attributes']['Recovered']
-        active = feature['attributes']['Active']
-        # in Unix Timestamp 17 digits, in UTC
-        lastupdate = feature['attributes']['Last_Update']
-        # convert to normal datetime && to UTC+7
-        date = datetime.fromtimestamp(lastupdate/1000)
-        utc_zone = tz.gettz('UTC')
-        th_zone = tz.gettz('Asia/Bangkok')
-        date = date.replace(tzinfo=utc_zone)
-        date = date.astimezone(th_zone)
-        date = date.strftime("%d/%m/%Y, %H:%M")  # format for Thais
+    def getData(self):
+        page = self.parser()  # select mode country
 
-        total_confirmed += int(confirmed)
-        total_death += int(deaths)
-        total_recoverd += int(recovered)
+        data = self.data
 
-        # crate new row & add to data list
-        row = [country, confirmed, deaths, recovered, active, date]
+        for feature in page['features']:
+            country = feature['attributes']['Country_Region']
+            country = feature['attributes']['Country_Region']
+            confirmed = feature['attributes']['Confirmed']
+            deaths = feature['attributes']['Deaths']
+            recovered = feature['attributes']['Recovered']
+            active = feature['attributes']['Active']
+            # in Unix Timestamp 17 digits, in UTC
+            lastupdate = feature['attributes']['Last_Update']
+            # convert to normal datetime && timeago it
+            date = datetime.fromtimestamp(lastupdate/1000)
+            now = datetime.utcnow()
+            date = timeago.format(date, now)
 
-        # if user specified countru return just the country we need
-        if country == cmd:
-            return row[1:4]
+            # crate new row & add to data list
+            data['Country'].append(country)
+            data['Confirmed'].append(confirmed)
+            data['Deaths'].append(deaths)
+            data['Recovered'].append(recovered)
+            data['Active'].append(active)
+            data['Lastest Update'].append(date)
 
-        data.append(row)
-
-    if cmd == 'World':
-        return [total_confirmed, total_death, total_recoverd]
-    elif cmd == 'getall':
+            # for state mode
+            if self.mode == 'state':
+                state = feature['attributes']['Province_State']
+                if state == None:
+                    state = ''
+                data['State'].append(state)
         return data
-    else:
-        raise Exception()
 
+    def getDF(self):
+        data = self.getData()
+        df = pd.DataFrame(data=data)
+        # make index start at 1
+        df.index += 1
+        df.index.name = 'Rank'
+        return df
 
-def get_df():
-    data = get_data('getall')
-    # create a dataframe
-    data_head = ['Country', 'Confirmed', 'Deaths',
-                 'Recovered', 'Active', 'Lastest Update']
-    df = pd.DataFrame(np.array(data),
-                      columns=data_head)
-    df.index += 1
-    df.index.name = 'Rank'
-    return df
+    def getHTML(self):
+        df = self.getDF()
+        cm = sns.light_palette("red", as_cmap=True)
+        df = df.style.set_properties(**{'text-align': 'center',
+                                        'border-color': 'black',
+                                        'font-size': '20pt',
+                                        'background-color': 'lightyellow',
+                                        'color': 'black'})\
+            .background_gradient(cmap=cm)\
+            .set_table_styles([{'selector': 'th', 'props': [('font-size', '20pt')]}])
 
-
-def get_html():
-    df = get_df()
-    df = df.style.set_properties(**{'text-align': 'center',
-                                    'border-color': 'black'})
-
-    return df.render()
-
-
-# TODO: this is broken in LINE!!!
-def get_table(cmd):
-    data = get_data(cmd)  # [Confirmed, Deaths, Recovered]
-    confirm = data[0]
-    death = data[1]
-    recov = data[2]
-
-    table_data = [['Confirmed', confirm], [
-        'Deaths', death], ['Recovered', recov]]
-    # create pretty table for visualization
-    table = tabulate(table_data, headers=['', cmd], tablefmt="fancy_grid")
-    return table
+        return df.render()
