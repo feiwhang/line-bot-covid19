@@ -3,8 +3,6 @@ import timeago
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from dateutil import tz
-from datetime import datetime
 from urllib.request import Request, urlopen
 
 
@@ -13,11 +11,11 @@ class scraper:
         self.mode = mode
         if self.mode == 'country':
             self.data = {'Country': [], 'Confirmed': [], 'Deaths': [],
-                         'Recovered': [], 'Active': [], 'Lastest Update': []}
+                         'Recovered': [], 'Active': []}
             self.url = 'https://services9.arcgis.com/N9p5hsImWXAccRNI/arcgis/rest/services/Z7biAeD8PAkqgmWhxG2A/FeatureServer/2/query?f=json&where=Confirmed%20%3E%200&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&orderByFields=Confirmed%20desc&resultOffset=0&resultRecordCount=200&cacheHint=true'
         elif self.mode == 'state':
             self.data = {'State': [], 'Country': [], 'Confirmed': [], 'Deaths': [],
-                         'Recovered': [], 'Active': [], 'Lastest Update': []}
+                         'Recovered': [], 'Active': []}
             self.url = 'https://services9.arcgis.com/N9p5hsImWXAccRNI/arcgis/rest/services/Z7biAeD8PAkqgmWhxG2A/FeatureServer/1/query?f=json&where=Confirmed%20%3E%200&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&orderByFields=Confirmed%20desc,Country_Region%20asc,Province_State%20asc&resultOffset=0&resultRecordCount=250&cacheHint=true'
 
         else:
@@ -47,12 +45,6 @@ class scraper:
             deaths = feature['attributes']['Deaths']
             recovered = feature['attributes']['Recovered']
             active = feature['attributes']['Active']
-            # in Unix Timestamp 17 digits, in UTC
-            lastupdate = feature['attributes']['Last_Update']
-            # convert to normal datetime && timeago it
-            date = datetime.fromtimestamp(lastupdate/1000)
-            now = datetime.utcnow()
-            date = timeago.format(date, now)
 
             # crate new row & add to data list
             data['Country'].append(country)
@@ -60,7 +52,6 @@ class scraper:
             data['Deaths'].append(deaths)
             data['Recovered'].append(recovered)
             data['Active'].append(active)
-            data['Lastest Update'].append(date)
 
             # for state mode
             if self.mode == 'state':
