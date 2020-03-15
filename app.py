@@ -53,20 +53,22 @@ def callback():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     input_message = event.message.text      # input message
-    message_id = event.message.id
+    # message_id = event.message.id
 
-    image_url = 'https://line-bot-covid19-ljnm7xnh6a-de.a.run.app/image/' + \
-        message_id + '/' + input_message
+    # image_url = 'https://line-bot-covid19-ljnm7xnh6a-de.a.run.app/image/' + \
+    #     message_id + '/' + input_message
 
-    image_message = ImageSendMessage(
-        original_content_url=image_url, preview_image_url=image_url)
+    # image_message = ImageSendMessage(
+    #     original_content_url=image_url, preview_image_url=image_url)
 
-    try:
-        line_bot_api.reply_message(event.reply_token, image_message)
-    except LineBotApiError:
-        output_message = 'ไม่พบ {}'.format(input_message)
-        message = TextSendMessage(text=output_message)  # output message
-        line_bot_api.reply_message(event.reply_token, message)
+    # try:
+    #     line_bot_api.reply_message(event.reply_token, image_message)
+    # except LineBotApiError:
+    #     output_message = 'ไม่พบ {}'.format(input_message)
+    #     message = TextSendMessage(text=output_message)  # output message
+    #     line_bot_api.reply_message(event.reply_token, message)
+    message = TextSendMessage(text='กำลังพัฒนาฟังชั่นก์นี้')  # output message
+    line_bot_api.reply_message(event.reply_token, message)
 
 
 if __name__ == '__main__':

@@ -70,14 +70,19 @@ class scraper:
         return df
 
     def getHTML(self):
+        if self.mode == 'state':
+            fontSize = '20pt'
+        else:
+            fontSize = '24pt'
+
         df = self.getDF()
         cm = sns.light_palette("red", as_cmap=True)
         df = df.style.set_properties(**{'text-align': 'center',
                                         'border-color': 'black',
-                                        'font-size': '20pt',
+                                        'font-size': fontSize,
                                         'background-color': 'lightyellow',
                                         'color': 'black'})\
             .background_gradient(cmap=cm)\
-            .set_table_styles([{'selector': 'th', 'props': [('font-size', '20pt')]}])
+            .set_table_styles([{'selector': 'th', 'props': [('font-size', fontSize)]}])
 
         return df.render()

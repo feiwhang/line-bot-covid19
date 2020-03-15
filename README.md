@@ -1,6 +1,6 @@
 # line-bot-covid19
 
-Real time COVID-19 Tracker via LINE BOT
+Real time COVID-19 Tracker via LINE
 
 ![](/QR.png)
 
