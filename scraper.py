@@ -16,13 +16,16 @@ class scraper:
         elif self.mode == 'state':
             self.data = {'State': [], 'Country': [], 'Confirmed': [], 'Deaths': [],
                          'Recovered': [], 'Active': []}
-            self.url = 'https://services9.arcgis.com/N9p5hsImWXAccRNI/arcgis/rest/services/Z7biAeD8PAkqgmWhxG2A/FeatureServer/1/query?f=json&where=Confirmed%20%3E%200&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&orderByFields=Confirmed%20desc,Country_Region%20asc,Province_State%20asc&resultOffset=0&resultRecordCount=250&cacheHint=true'
+            self.url = 'https://services9.arcgis.com/N9p5hsImWXAccRNI/arcgis/rest/services/Z7biAeD8PAkqgmWhxG2A/FeatureServer/1/query?f=json&where=(Confirmed%20%3E%200)%20AND%20(Recovered%3C%3E0)&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&orderByFields=Recovered%20desc%2CCountry_Region%20asc%2CProvince_State%20asc&resultOffset=0&resultRecordCount=250&cacheHint=true'
 
         else:
             raise Exception
 
     def parser(self):
-        req = Request(self.url, headers={'User-Agent': 'Mozilla/5.0'})
+        headers = {'User-Agent': 'Mozilla/5.0',
+                   'Origin': 'https://www.arcgis.com',
+                   'Referer': 'https://www.arcgis.com/apps/opsdashboard/index.html'}
+        req = Request(self.url, headers=headers)
 
         # open up connection, grap the page
         uClient = urlopen(req)

@@ -1,13 +1,11 @@
-import urllib3
-import requests
-from helper import statePage, countryPage
+import codecs
+from datetime import datetime
+from helper import writePage
 from linebot import LineBotApi, WebhookHandler
 from flask import Flask, abort, request, send_file
 from linebot.exceptions import InvalidSignatureError, LineBotApiError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage, ImageSendMessage
 
-# have to disable warning due to a primitive version of ThailandPOST API
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
 
@@ -20,14 +18,43 @@ line_bot_api = LineBotApi(channel_access_token)
 handler = WebhookHandler(channel_secret)
 
 
+def getPage(mode):
+    while True:
+        try:
+            now = datetime.utcnow()
+
+            html = codecs.open('pages/' + mode + '.html', 'r').read()
+            htmlTime = datetime.strptime(html[-26:], "%Y-%m-%d %H:%M:%S.%f")
+            differ = now - htmlTime
+            print(differ.seconds)
+            # throw exception when more than 15 mins
+            if differ.seconds > 15*60:
+                raise Exception
+
+            return html
+
+        except NameError:
+            print("Something's wrong with the name")
+            break
+        except IOError:
+            print("File not Found")
+            writePage('country')
+            continue
+        except Exception:
+            writePage('country')
+            continue
+
+        break
+
+
 @app.route('/country')
 def country():
-    return countryPage()
+    getPage('country')
 
 
 @app.route('/state')
 def state():
-    return statePage()
+    getPage('state')
 
 
 @app.route("/image/<message_id>/<cmd>")

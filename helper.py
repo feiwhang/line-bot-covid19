@@ -1,16 +1,16 @@
+import codecs
 from scraper import scraper
+from datetime import datetime
 
 
-def statePage():
-    stateScraper = scraper('state')
-    html = stateScraper.getHTML()
-    return html
+def writePage(mode):
+    sc = scraper(mode)
+    html = sc.getHTML()
+    now = datetime.utcnow()
+    page = html + str(datetime.utcnow())
 
-
-def countryPage():
-    countryScraper = scraper('country')
-    html = countryScraper.getHTML()
-    return html
+    with open('pages/' + mode + '.html', 'w') as fp:
+        fp.write(page)
 
 
 def getPlaces():
