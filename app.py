@@ -1,6 +1,4 @@
-import codecs
-from datetime import datetime
-from helper import writePage
+from helper import getPage
 from linebot import LineBotApi, WebhookHandler
 from flask import Flask, abort, request, send_file
 from linebot.exceptions import InvalidSignatureError, LineBotApiError
@@ -18,43 +16,14 @@ line_bot_api = LineBotApi(channel_access_token)
 handler = WebhookHandler(channel_secret)
 
 
-def getPage(mode):
-    while True:
-        try:
-            now = datetime.utcnow()
-
-            html = codecs.open('pages/' + mode + '.html', 'r').read()
-            htmlTime = datetime.strptime(html[-26:], "%Y-%m-%d %H:%M:%S.%f")
-            differ = now - htmlTime
-            print(differ.seconds)
-            # throw exception when more than 15 mins
-            if differ.seconds > 15*60:
-                raise Exception
-
-            return html
-
-        except NameError:
-            print("Something's wrong with the name")
-            break
-        except IOError:
-            print("File not Found")
-            writePage('country')
-            continue
-        except Exception:
-            writePage('country')
-            continue
-
-        break
-
-
 @app.route('/country')
 def country():
-    getPage('country')
+    return getPage('country')
 
 
 @app.route('/state')
 def state():
-    getPage('state')
+    return getPage('state')
 
 
 @app.route("/image/<message_id>/<cmd>")

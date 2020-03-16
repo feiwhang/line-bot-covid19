@@ -2,7 +2,7 @@ import json
 import timeago
 import numpy as np
 import pandas as pd
-import seaborn as sns
+
 from urllib.request import Request, urlopen
 
 
@@ -74,18 +74,17 @@ class scraper:
 
     def getHTML(self):
         if self.mode == 'state':
-            fontSize = '20pt'
+            fontSize = '22pt'
         else:
             fontSize = '24pt'
 
         df = self.getDF()
-        cm = sns.light_palette("red", as_cmap=True)
+
         df = df.style.set_properties(**{'text-align': 'center',
                                         'border-color': 'black',
                                         'font-size': fontSize,
                                         'background-color': 'lightyellow',
                                         'color': 'black'})\
-            .background_gradient(cmap=cm)\
-            .set_table_styles([{'selector': 'th', 'props': [('font-size', fontSize)]}])
-
+            .set_table_styles([{'selector': 'th', 'props': [('font-size', fontSize)]}])\
+            .background_gradient(cmap='Reds')
         return df.render()
