@@ -75,11 +75,9 @@ class scraper:
         # make index start at 1
         df.index += 1
         df.index.name = 'Rank'
-        csv = df.to_csv()
 
-        # write to csv file
-        with open('files/' + self.mode + '.csv', 'w') as fp:
-            fp.write(csv)
+        # write to csv
+        df.to_csv('files/' + self.mode + '.csv', index=False)
 
     def getHTML(self):
         # write a timestamp of last get data
@@ -96,10 +94,10 @@ class scraper:
 
         # read csv to get data
         try:
-            df = pd.read_csv('files/' + self.mode+'.csv')
+            df = pd.read_csv('files/' + self.mode+'.csv', index_col=False)
         except FileNotFoundError:
             self.writeDF()
-            df = pd.read_csv('files/' + self.mode+'.csv')
+            df = pd.read_csv('files/' + self.mode+'.csv', index_col=False)
 
         # adjust font for each mode
         if self.mode == 'state':
