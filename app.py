@@ -1,5 +1,5 @@
 import json
-from helper import getPage, getPic
+from helper import getPage, getCountryPage, getStatePage
 from linebot import LineBotApi, WebhookHandler
 from flask import (Flask, abort, request, send_file)
 from linebot.exceptions import InvalidSignatureError, LineBotApiError
@@ -19,6 +19,11 @@ line_bot_api = LineBotApi(channel_access_token)
 handler = WebhookHandler(channel_secret)
 
 
+@app.route('/')
+def mainPage():
+    return getPage('country')
+
+
 @app.route('/country')
 def country():
     return getPage('country')
@@ -27,6 +32,22 @@ def country():
 @app.route('/state')
 def state():
     return getPage('state')
+
+
+@app.route('/page/country/<country>')
+def countryPage(country):
+    try:
+        return getCountryPage(country.replace('-', ' '))
+    except KeyError:
+        return "ไม่พบประเทศนี้"
+
+
+@app.route('/page/state/<state>')
+def statePage(state):
+    try:
+        return getStatePage(state.replace('-', ' '))
+    except KeyError:
+        return "ไม่พบเมืองนี้"
 
 
 @app.route("/callback", methods=['POST'])
@@ -62,12 +83,19 @@ def handle_message(event):
                 content = json.load(fp)
             message = FlexSendMessage(alt_text='Country', contents=content)
 
+        elif input_message == 'state':
+            with open('files/state.json', 'r') as fp:
+                content = json.load(fp)
+            message = FlexSendMessage(alt_text='Country', contents=content)
+
+        elif input_message == 'news':
+            message = TextSendMessage(text='In development')
+
         else:
-            # other command for each country/state
             raise Exception
 
-    except Exception:  # For each country and menu (places)
-        pass
+    except Exception:
+        message = TextSendMessage(text='คำสั่ง {}'.format(input_message))
 
     try:
         line_bot_api.reply_message(event.reply_token, message)

@@ -1,6 +1,7 @@
 import json
 import pandas as pd
 from scraper import scraper
+from string import capwords
 
 
 def getPage(mode):
@@ -8,62 +9,29 @@ def getPage(mode):
     return sc.getHTML()
 
 
-def writeJSON(mode):
+def getCountryPage(country):
+    allDF = pd.read_csv('files/country.csv', index_col=0)
 
-    places = ['Thailand', 'China', 'Italy', 'Iran', 'Spain', 'South Korea', 'Germany', 'France',
-              'US', 'Switzerland', 'United Kingdom', 'Japan', 'Malaysia', 'Canada', 'Australia',
-              'Singapore',  'Philippines', 'Indonesia', 'India',
-              'Russia', 'Taiwan', 'Vietnam', 'Cambodia', 'New Zealand']
-
-    print(len(places))
-    mainJSON = {
-        "type": "bubble",
-        "size": "kilo",
-        "header": {
-            "type": "box",
-            "layout": "vertical",
-            "contents": [
-                {
-                    "type": "text",
-                    "text": "Choose Country",
-                    "size": "xxl",
-                    "margin": "none",
-                    "style": "normal",
-                    "position": "relative",
-                    "align": "center",
-                    "gravity": "top",
-                    "wrap": True,
-                    "color": "#4D85F5"
-                }
-            ]
-        },
-        "body": {
-            "type": "box",
-            "layout": "vertical",
-            "contents": []
-        }
-    }
-    for place in places:
-        mainJSON['body']['contents'].append({
-            "type": "button",
-            "action": {
-                "type": "message",
-                "label": place,
-                "text": place
-            },
-            "position": "relative",
-            "style": "primary",
-            "gravity": "center",
-            "height": "sm",
-            "margin": "xs"
-        })
-
-    with open('files/' + mode + '.json', 'w') as fp:
-        json.dump(mainJSON, fp)
+    df = allDF.loc[capwords(country), :].to_frame()
+    df = df.style.set_properties(**{'text-align': 'center',
+                                    'border-color': 'black',
+                                    'font-size': 110,
+                                    'background-color': 'lightyellow',
+                                    'color': 'black'})\
+        .set_table_styles([{'selector': 'th', 'props': [('font-size', 110)]}])\
+        .background_gradient(cmap='Blues')
+    return df.render()
 
 
-def getPic(place):
-    pass
-
-
-writeJSON('country')
+def getStatePage(state):
+    allDF = pd.read_csv('files/state.csv', index_col=0)
+    del allDF['Country']
+    df = allDF.loc[capwords(state), :].to_frame()
+    df = df.style.set_properties(**{'text-align': 'center',
+                                    'border-color': 'black',
+                                    'font-size': 110,
+                                    'background-color': 'lightyellow',
+                                    'color': 'black'})\
+        .set_table_styles([{'selector': 'th', 'props': [('font-size', 110)]}])\
+        .background_gradient(cmap='Blues')
+    return df.render()
