@@ -44,7 +44,11 @@ class scraper:
 
         for feature in page['features']:
             country = feature['attributes']['Country_Region']
-            country = feature['attributes']['Country_Region']
+            # some special cases
+            if country == 'Korea, South':
+                country = 'South Korea'
+            if country == 'Taiwan*':
+                country = 'Taiwan'
             confirmed = feature['attributes']['Confirmed']
             deaths = feature['attributes']['Deaths']
             recovered = feature['attributes']['Recovered']
@@ -72,9 +76,6 @@ class scraper:
 
         data = self.getData()
         df = pd.DataFrame(data=data)
-        # make index start at 1
-        df.index += 1
-        df.index.name = 'Rank'
 
         # write to csv
         df.to_csv('files/' + self.mode + '.csv', index=False)
@@ -87,8 +88,8 @@ class scraper:
         now = datetime.utcnow()
         lastUpdate = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f")
         differ = now - lastUpdate
-        print(differ.seconds)
-        # write new datafram when more than 15 mins
+
+        # write new dataframe when more than 15 mins
         if differ.seconds > 15 * 60:
             self.writeDF()
 
@@ -98,6 +99,11 @@ class scraper:
         except FileNotFoundError:
             self.writeDF()
             df = pd.read_csv('files/' + self.mode+'.csv', index_col=False)
+
+        # make index start at 1
+        df.index += 1
+        df.index.name = 'Rank'
+        df = df.fillna('')  # fill with blank instead
 
         # adjust font for each mode
         if self.mode == 'state':

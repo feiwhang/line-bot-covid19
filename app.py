@@ -1,4 +1,5 @@
-from helper import getPage
+import json
+from helper import getPage, getPic
 from linebot import LineBotApi, WebhookHandler
 from flask import (Flask, abort, request, send_file)
 from linebot.exceptions import InvalidSignatureError, LineBotApiError
@@ -28,11 +29,6 @@ def state():
     return getPage('state')
 
 
-@app.route("/image/<message_id>/<cmd>")
-def image(cmd):
-    return cmd
-
-
 @app.route("/callback", methods=['POST'])
 def callback():
     # get X-Line-Signature header value
@@ -51,75 +47,34 @@ def callback():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     input_message = event.message.text      # input message
-    if input_message == 'location':
-        getLocation = QuickReply(items=[
-            QuickReplyButton(action=LocationAction(
-                label="Location", text="text"))])
-        message = TextSendMessage(
-            text='กดปุ่มข้างล่างเพื่อแชร์ Location', quick_reply=getLocation)
 
-    elif input_message == 'country':
-        contents = {
-            "type": "bubble",
-            "body": {
-                "type": "box",
-                "layout": "vertical",
-                "spacing": "md",
-                "contents": [
-                    {
-                        "type": "message",
-                        "style": "primary",
-                        "action": {
-                            "type": "uri",
-                            "label": "Thailand",
-                        }
-                    }
-                ]
-            }
-        }
-        message = FlexSendMessage(alt_text='Country', contents=contents)
+    try:
+        # Rich menus
+        if input_message == 'location':
+            getLocation = QuickReply(items=[
+                QuickReplyButton(action=LocationAction(
+                    label="Location", text="text"))])
+            message = TextSendMessage(
+                text='กดปุ่มข้างล่างเพื่อแชร์ Location', quick_reply=getLocation)
 
-    elif input_message == 'state':
-        contents = {
-            "type": "bubble",
-            "body": {
-                "type": "box",
-                "layout": "vertical",
-                "spacing": "md",
-                "contents": [
-                    {
-                        "type": "message",
-                        "style": "primary",
-                        "action": {
-                            "type": "uri",
-                            "label": "Hubei",
-                        }
-                    }
-                ]
-            }
-        }
-        message = FlexSendMessage(alt_text='State', contents=contents)
+        elif input_message == 'country':
+            with open('files/country.json', 'r') as fp:
+                content = json.load(fp)
+            message = FlexSendMessage(alt_text='Country', contents=content)
 
-    else:
-        message = TextSendMessage(text='เกิดข้อผิดพลาด')
+        else:
+            # other command for each country/state
+            raise Exception
 
-    line_bot_api.reply_message(event.reply_token, message)
+    except Exception:  # For each country and menu (places)
+        pass
 
-    # message_id = event.message.id
-
-    # image_url = 'https://line-bot-covid19-ljnm7xnh6a-de.a.run.app/image/' + \
-    #     message_id + '/' + input_message
-
-    # image_message = ImageSendMessage(
-    #     original_content_url=image_url, preview_image_url=image_url)
-
-    # try:
-    #     line_bot_api.reply_message(event.reply_token, image_message)
-    # except LineBotApiError:
-    #     output_message = 'ไม่พบ {}'.format(input_message)
-    #     message = TextSendMessage(text=output_message)  # output message
-    #     line_bot_api.reply_message(event.reply_token, message)
-    # output message
+    try:
+        line_bot_api.reply_message(event.reply_token, message)
+    except LineBotApiError:  # no country
+        output_message = 'ไม่พบ {}'.format(input_message)
+        message = TextSendMessage(text=output_message)  # output message
+        line_bot_api.reply_message(event.reply_token, message)
 
 
 @handler.add(MessageEvent, message=LocationMessage)
