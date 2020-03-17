@@ -13,7 +13,7 @@ def getPage(mode):
 
 
 def getTimeSeriesPlot(country):
-    if country == "United States":
+    if country == "United States" or 'us':
         country = 'US'
     if not country.isupper():
         country = capwords(country)
@@ -59,7 +59,7 @@ def getTimeSeriesPlot(country):
 def getCountryPage(country):
     allDF = pd.read_csv('files/country.csv', index_col=0)
 
-    if country == "United States":
+    if country == "United States" or 'us':
         country = 'US'
     if not country.isupper():
         country = capwords(country)
