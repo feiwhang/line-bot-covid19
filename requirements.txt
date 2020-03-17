@@ -5,3 +5,4 @@ Flask
 pandas
 numpy
 Pillow
+matplotlib

@@ -1,7 +1,8 @@
 import json
+import matplotlib
 import numpy as np
 import pandas as pd
-
+from datetime import datetime
 from urllib.request import Request, urlopen
 
 
@@ -36,6 +37,7 @@ class scraper:
         return page
 
     def getData(self):
+
         page = self.parser()  # select mode country
 
         data = self.data
@@ -63,22 +65,49 @@ class scraper:
                 data['State'].append(state)
         return data
 
-    def getDF(self):
+    def writeDF(self):
+        # write a timestamp of last get data
+        with open('files/lastUpdate.txt', 'w') as fp:
+            fp.write(str(datetime.utcnow()))
+
         data = self.getData()
         df = pd.DataFrame(data=data)
         # make index start at 1
         df.index += 1
         df.index.name = 'Rank'
-        return df
+        csv = df.to_csv()
+
+        # write to csv file
+        with open('files/' + self.mode + '.csv', 'w') as fp:
+            fp.write(csv)
 
     def getHTML(self):
+        # write a timestamp of last get data
+        with open('files/lastUpdate.txt', 'r') as fp:
+            timestamp = fp.read()
+
+        now = datetime.utcnow()
+        lastUpdate = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f")
+        differ = now - lastUpdate
+        print(differ.seconds)
+        # write new datafram when more than 15 mins
+        if differ.seconds > 15 * 60:
+            self.writeDF()
+
+        # read csv to get data
+        try:
+            df = pd.read_csv('files/' + self.mode+'.csv')
+        except FileNotFoundError:
+            self.writeDF()
+            df = pd.read_csv('files/' + self.mode+'.csv')
+
+        # adjust font for each mode
         if self.mode == 'state':
             fontSize = '22pt'
         else:
             fontSize = '24pt'
 
-        df = self.getDF()
-
+        # set style
         df = df.style.set_properties(**{'text-align': 'center',
                                         'border-color': 'black',
                                         'font-size': fontSize,

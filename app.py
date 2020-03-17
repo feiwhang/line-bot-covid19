@@ -1,8 +1,9 @@
 from helper import getPage
 from linebot import LineBotApi, WebhookHandler
-from flask import Flask, abort, request, send_file
+from flask import (Flask, abort, request, send_file)
 from linebot.exceptions import InvalidSignatureError, LineBotApiError
-from linebot.models import MessageEvent, TextMessage, TextSendMessage, ImageSendMessage
+from linebot.models import (MessageEvent, TextMessage,
+                            TextSendMessage, ImageSendMessage, QuickReply, LocationMessage, LocationAction, QuickReplyButton)
 
 
 app = Flask(__name__)
@@ -49,6 +50,25 @@ def callback():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     input_message = event.message.text      # input message
+    if input_message == 'location':
+        getLocation = QuickReply(items=[
+            QuickReplyButton(action=LocationAction(
+                label="Location", text="text"))
+        ])
+        message = TextSendMessage(
+            text='กดปุ่มข้างล่างเพื่อแชร์ Location', quick_reply=getLocation)
+    elif input_message == 'country':
+        message = TextSendMessage(
+            text='รายชื่อประเทศ')
+    elif input_message == 'state':
+        message = TextSendMessage(
+            text='รายชื่อเมือง')
+    else:
+        message = TextSendMessage(
+            text='เกิดข้อผิดพลาด')
+
+    line_bot_api.reply_message(event.reply_token, message)
+
     # message_id = event.message.id
 
     # image_url = 'https://line-bot-covid19-ljnm7xnh6a-de.a.run.app/image/' + \
@@ -63,7 +83,12 @@ def handle_message(event):
     #     output_message = 'ไม่พบ {}'.format(input_message)
     #     message = TextSendMessage(text=output_message)  # output message
     #     line_bot_api.reply_message(event.reply_token, message)
-    message = TextSendMessage(text='กำลังพัฒนาฟังชั่นก์นี้')  # output message
+    # output message
+
+
+@handler.add(MessageEvent, message=LocationMessage)
+def handle_message(event):
+    message = TextSendMessage(text='In development')
     line_bot_api.reply_message(event.reply_token, message)
 
 
