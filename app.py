@@ -2,8 +2,9 @@ from helper import getPage
 from linebot import LineBotApi, WebhookHandler
 from flask import (Flask, abort, request, send_file)
 from linebot.exceptions import InvalidSignatureError, LineBotApiError
-from linebot.models import (MessageEvent, TextMessage,
-                            TextSendMessage, ImageSendMessage, QuickReply, LocationMessage, LocationAction, QuickReplyButton)
+from linebot.models import (MessageEvent, TextMessage, TextSendMessage,
+                            ImageSendMessage, QuickReply, LocationMessage,
+                            LocationAction, QuickReplyButton, FlexSendMessage)
 
 
 app = Flask(__name__)
@@ -53,19 +54,54 @@ def handle_message(event):
     if input_message == 'location':
         getLocation = QuickReply(items=[
             QuickReplyButton(action=LocationAction(
-                label="Location", text="text"))
-        ])
+                label="Location", text="text"))])
         message = TextSendMessage(
             text='กดปุ่มข้างล่างเพื่อแชร์ Location', quick_reply=getLocation)
+
     elif input_message == 'country':
-        message = TextSendMessage(
-            text='รายชื่อประเทศ')
+        contents = {
+            "type": "bubble",
+            "body": {
+                "type": "box",
+                "layout": "vertical",
+                "spacing": "md",
+                "contents": [
+                    {
+                        "type": "message",
+                        "style": "primary",
+                        "action": {
+                            "type": "uri",
+                            "label": "Thailand",
+                        }
+                    }
+                ]
+            }
+        }
+        message = FlexSendMessage(alt_text='Country', contents=contents)
+
     elif input_message == 'state':
-        message = TextSendMessage(
-            text='รายชื่อเมือง')
+        contents = {
+            "type": "bubble",
+            "body": {
+                "type": "box",
+                "layout": "vertical",
+                "spacing": "md",
+                "contents": [
+                    {
+                        "type": "message",
+                        "style": "primary",
+                        "action": {
+                            "type": "uri",
+                            "label": "Hubei",
+                        }
+                    }
+                ]
+            }
+        }
+        message = FlexSendMessage(alt_text='State', contents=contents)
+
     else:
-        message = TextSendMessage(
-            text='เกิดข้อผิดพลาด')
+        message = TextSendMessage(text='เกิดข้อผิดพลาด')
 
     line_bot_api.reply_message(event.reply_token, message)
 

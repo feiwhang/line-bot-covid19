@@ -1,8 +1,14 @@
 # line-bot-covid19
 
-Real time COVID-19 Tracker via LINE
+```html
+<h2>Real time COVID-19 Tracker via LINE</h2>
 
-![](/QR.png)
-
-LINE ID: @941vqkzk
-or use the QR code above
+<img src="https://qr-official.line.me/sid/M/941vqkzk.png" />
+<a href="https://lin.ee/E5lxtr"
+    ><img
+        src="https://scdn.line-apps.com/n/line_add_friends/btn/th.png"
+        alt="Add me"
+        height="36"
+        border="0"
+/></a>
+```
