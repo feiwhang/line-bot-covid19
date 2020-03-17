@@ -6,3 +6,4 @@ pandas
 numpy
 Pillow
 matplotlib
+plotly==4.5.4

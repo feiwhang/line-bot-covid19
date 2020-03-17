@@ -1,6 +1,7 @@
 import json
 import numpy as np
 import pandas as pd
+from io import StringIO
 from datetime import datetime
 from urllib.request import Request, urlopen
 
@@ -118,4 +119,37 @@ class scraper:
                                         'color': 'black'})\
             .set_table_styles([{'selector': 'th', 'props': [('font-size', fontSize)]}])\
             .background_gradient(cmap='Reds')
+
         return df.render()
+
+    def writeTimeSeries(self):
+        url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv'
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        req = Request(url, headers=headers)
+
+        # open up connection, grap the page
+        uClient = urlopen(req)
+        page_csv = uClient.read().decode('utf-8').replace('Korea, South',
+                                                          'South Korea').replace('Taiwan*', 'Taiwan')
+        uClient.close()  # close connection
+
+        # write a timestamp of last get data
+        with open('files/lastUpdateTimeSeries.txt', 'r') as fp:
+            timestamp = fp.read()
+
+        now = datetime.utcnow()
+        try:
+            lastUpdate = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f")
+            differ = now - lastUpdate
+            # write new dataframe when more than 3 hours
+            if differ.seconds > 60 * 60 * 3:
+                with open('files/timeseries.csv', 'w') as fp:
+                    fp.write(page_csv)
+                with open('files/lastUpdateTimeSeries.txt', 'w') as fp:
+                    fp.write(str(now))
+
+        except ValueError:
+            with open('files/timeseries.csv', 'w') as fp:
+                fp.write(page_csv)
+            with open('files/lastUpdateTimeSeries.txt', 'w') as fp:
+                fp.write(str(now))
