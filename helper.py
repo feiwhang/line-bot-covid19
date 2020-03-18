@@ -5,6 +5,7 @@ from io import BytesIO
 from scraper import scraper
 from string import capwords
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
 
 def getPage(mode):
@@ -43,11 +44,15 @@ def getTimeSeriesPlot(country):
         date = pd.to_datetime(ct.columns)
         case = ct.loc[country, :].to_list()
 
-    fig, ax = plt.subplots(figsize=(10, 7))
+    fig, ax = plt.subplots(figsize=(12, 10))
     ax.plot(date, case, linewidth=5)
-    ax.set_xlabel('Date', fontsize=25)
-    ax.set_ylabel('Cases', fontsize=25)
-    plt.yticks(fontsize=18)
+    ax.set_ylabel('Cases', fontsize=25, labelpad=20)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=20)
+    # format the Date axis
+    monthyearFmt = mdates.DateFormatter('%B %d')
+    ax.xaxis.set_major_formatter(monthyearFmt)
+    plt.xticks(rotation=10)
 
     # save to html
     tmp = BytesIO()
@@ -55,6 +60,9 @@ def getTimeSeriesPlot(country):
     encoded = base64.b64encode(tmp.getvalue()).decode('utf-8')
 
     return encoded
+
+
+getTimeSeriesPlot('Thailand')
 
 
 def getCountryPage(country):
