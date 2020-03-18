@@ -13,7 +13,7 @@ def getPage(mode):
 
 
 def getTimeSeriesPlot(country):
-    if country == "United States" or 'us':
+    if country == 'us':
         country = 'US'
     if not country.isupper():
         country = capwords(country)
@@ -45,8 +45,9 @@ def getTimeSeriesPlot(country):
 
     fig, ax = plt.subplots(figsize=(10, 7))
     ax.plot(date, case, linewidth=5)
-    ax.set_xlabel('Date', fontsize=20)
-    ax.set_ylabel('Case', fontsize=20)
+    ax.set_xlabel('Date', fontsize=25)
+    ax.set_ylabel('Cases', fontsize=25)
+    plt.yticks(fontsize=18)
 
     # save to html
     tmp = BytesIO()
@@ -59,7 +60,7 @@ def getTimeSeriesPlot(country):
 def getCountryPage(country):
     allDF = pd.read_csv('files/country.csv', index_col=0)
 
-    if country == "United States" or 'us':
+    if country == 'us':
         country = 'US'
     if not country.isupper():
         country = capwords(country)
