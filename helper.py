@@ -44,15 +44,16 @@ def getTimeSeriesPlot(country):
         date = pd.to_datetime(ct.columns)
         case = ct.loc[country, :].to_list()
 
-    fig, ax = plt.subplots(figsize=(12, 10))
+    fig, ax = plt.subplots(figsize=(10, 8))
     ax.plot(date, case, linewidth=5)
     ax.set_ylabel('Cases', fontsize=25, labelpad=20)
-    plt.xticks(fontsize=12)
+    plt.xticks(fontsize=18)
     plt.yticks(fontsize=20)
     # format the Date axis
-    monthyearFmt = mdates.DateFormatter('%B %d')
-    ax.xaxis.set_major_formatter(monthyearFmt)
-    plt.xticks(rotation=10)
+    locator = mdates.AutoDateLocator()
+    formatter = mdates.ConciseDateFormatter(locator)
+    ax.xaxis.set_major_locator(locator)
+    ax.xaxis.set_major_formatter(formatter)
 
     # save to html
     tmp = BytesIO()
@@ -60,9 +61,6 @@ def getTimeSeriesPlot(country):
     encoded = base64.b64encode(tmp.getvalue()).decode('utf-8')
 
     return encoded
-
-
-getTimeSeriesPlot('Thailand')
 
 
 def getCountryPage(country):
