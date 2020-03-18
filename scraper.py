@@ -77,8 +77,10 @@ class scraper:
         data = self.getData()
         df = pd.DataFrame(data=data)
 
-        # write to csv
-        df.to_csv('files/' + self.mode + '.csv', index=False)
+        # overwrite to csv file
+        csv = df.to_csv(index=False)
+        with open('files/' + self.mode + '.csv', 'w') as fp:
+            fp.write(csv)
 
     def getHTML(self):
         # write a timestamp of last get data
