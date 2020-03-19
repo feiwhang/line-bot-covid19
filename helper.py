@@ -62,6 +62,8 @@ def getWorldData():
             'Death': [], 'Travel': []}
 
     for country in json['statistics']:
+        if len(country['name']) > 15:  # length control
+            continue
         data['Country'].append(country['name'])
         data['Confirmed'].append(country['confirmed'])
         data['Recovered'].append(country['recovered'])
@@ -177,8 +179,8 @@ def getCasesHTML():
     confirmed = thai_json['ผู้ติดเชื้อ']
     update = thai_json['เพิ่มวันที่']
     summaryThai = '<h1> ผู้ติดเชื้อ: ' + confirmed + \
-        ' ,     กำลังรักษา: ' + hospitolized + ' ,     หายแล้ว: ' + \
-        recovered + ' ,     เสียชีวิต: ' + death + ' ,     อัพเดท: ' + update + '</h1>'
+        ' ,   กำลังรักษา: ' + hospitolized + ' ,   หายแล้ว: ' + \
+        recovered + ' ,   เสียชีวิต: ' + death + ' ,   อัพเดท: ' + update + '</h1>'
 
     # set style
     fontSize = '20pt'
