@@ -1,5 +1,5 @@
 import json
-from helper import getWorldHTML, getCasesHTML, getCountryPage
+from helper import world, cases, page
 from linebot import LineBotApi, WebhookHandler
 from flask import (Flask, abort, request, send_file)
 from linebot.exceptions import InvalidSignatureError, LineBotApiError
@@ -21,17 +21,17 @@ handler = WebhookHandler(channel_secret)
 
 @app.route('/')
 def mainPage():
-    return getWorldHTML()
+    return world().getWorldHTML()
 
 
 @app.route('/world')
 def world():
-    return getWorldHTML()
+    return world().getWorldHTML()
 
 
 @app.route('/cases')
 def cases():
-    return getCasesHTML()
+    return cases().getCasesHTML()
 
 
 @app.route('/news')
@@ -42,7 +42,7 @@ def news():
 @app.route('/country/<country>')
 def countryPage(country):
     try:
-        return getCountryPage(country.replace('-', ' '))
+        return page().getCountryPage(country.replace('-', ' '))
     except KeyError:
         return "ไม่พบประเทศนี้ {}".format(country.replace('-', ' '))
 
