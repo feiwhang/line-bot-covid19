@@ -25,24 +25,25 @@ def mainPage():
 
 
 @app.route('/world')
-def world():
+def worldPage():
     return world().getWorldHTML()
 
 
 @app.route('/cases')
-def cases():
+def casesPage():
     return cases().getCasesHTML()
 
 
 @app.route('/news')
-def news():
+def newsPage():
     return "In development"
 
 
 @app.route('/country/<country>')
 def countryPage(country):
+    p = page()
     try:
-        return page().getCountryPage(country.replace('-', ' '))
+        return p.getCountryPage(country.replace('-', ' '))
     except KeyError:
         return "ไม่พบประเทศนี้ {}".format(country.replace('-', ' '))
 
