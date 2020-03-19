@@ -44,7 +44,7 @@ def countryPage(country):
     try:
         return getCountryPage(country.replace('-', ' '))
     except KeyError:
-        return "ไม่พบประเทศนี้"
+        return "ไม่พบประเทศนี้ {}".format(country.replace('-', ' '))
 
 
 @app.route("/callback", methods=['POST'])

@@ -4,6 +4,7 @@ import base64
 import numpy as np
 import pandas as pd
 from io import BytesIO
+
 from string import capwords
 from datetime import datetime
 import matplotlib.pyplot as plt
@@ -64,6 +65,7 @@ def getWorldData():
     for country in json['statistics']:
         if len(country['name']) > 15:  # length control
             continue
+
         data['Country'].append(country['name'])
         data['Confirmed'].append(country['confirmed'])
         data['Recovered'].append(country['recovered'])
@@ -133,7 +135,7 @@ def getWorldHTML():
     df.reset_index(level=0, inplace=True)  # make Rank as one of the columns
 
     # set style
-    fontSize = '24pt'
+    fontSize = '27pt'
     df = df.style.set_properties(**{'text-align': 'center',
                                     'border-color': 'black',
                                     'font-size': fontSize,
@@ -203,7 +205,8 @@ def writeTimeSeries():
     # open up connection, grap the page
     uClient = urlopen(req)
     page_csv = uClient.read().decode('utf-8').replace('Korea, South',
-                                                      'South Korea').replace('Taiwan*', 'Taiwan')
+                                                      'South Korea').replace('Taiwan*', 'Taiwan').replace('US', 'United States')
+
     uClient.close()  # close connection
 
     now = datetime.utcnow()
@@ -234,8 +237,10 @@ def writeTimeSeries():
 
 
 def getTimeSeriesPlot(country):
+
     # Caplitalize country params from url
     country = capwords(country)
+
     try:
         df = pd.read_csv('files/timeseries.csv', index_col=1)
     except FileNotFoundError:
@@ -293,16 +298,17 @@ def getCountryPage(country):
 
     country = capwords(country)
 
-    df = allDF.loc[country, :].to_frame()
+    # select only row of country
+    df = allDF.loc[country].to_frame()
     # remove travel row if NaN
     df.dropna(axis=0, how='any', inplace=True)
 
     df = df.style.set_properties(**{'text-align': 'center',
                                     'border-color': 'black',
-                                    'font-size': 110,
+                                    'font-size': 115,
                                     'background-color': 'lightblue',
                                     'color': 'black'})\
-        .set_table_styles([{'selector': 'th', 'props': [('font-size', 110)]}])\
+        .set_table_styles([{'selector': 'th', 'props': [('font-size', 115)]}])\
         .background_gradient(cmap='Blues')
 
     # add time series plot
@@ -310,3 +316,8 @@ def getCountryPage(country):
     page_html += "<img src=\'data:image/png;base64,{}\'> ".format(
         getTimeSeriesPlot(country))
     return '<meta charset="UTF-8">' + page_html
+
+
+# print(getCountryPage('United States'))
+with open('tmp.html', 'w') as fp:
+    fp.write(getCountryPage('China'))
