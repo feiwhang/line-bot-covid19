@@ -409,7 +409,7 @@ class news:
 
         # exit if less than 30 mins
         if differ.seconds < 30 * 60:
-            pass
+            return
 
         # write new timestamp
         with open('files/newsLastUpdate.txt', 'w') as fp:
@@ -493,10 +493,12 @@ class news:
                             "label": "action",
                             "uri": link
                         },
-                        "maxLines": 2
+                        "maxLines": 2,
+                        "wrap": True
                     },
                     {
-                        "type": "spacer"
+                        "type": "spacer",
+                        "size": "md"
                     }
                 ]
             }
