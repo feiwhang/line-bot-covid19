@@ -50,137 +50,6 @@ def writeCSV(mode):
         fp.write(str(datetime.utcnow()))
 
 
-class page:
-    def writeTimeSeries(self):
-        url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv'
-        headers = {'User-Agent': 'Mozilla/5.0'}
-        req = Request(url, headers=headers)
-
-        # open up connection, grap the page
-        uClient = urlopen(req)
-        page_csv = uClient.read().decode('utf-8').replace('Korea, South',
-                                                          'South Korea').replace('Taiwan*', 'Taiwan').replace('US', 'United States')
-
-        uClient.close()  # close connection
-
-        now = datetime.utcnow()
-
-        # try to get timestamp of the last update
-        try:
-            # write a timestamp of last get data
-            with open('files/timeSeriesLastUpdate.txt', 'r') as fp:
-                timestamp = fp.read()
-            with open('files/timeseries.csv', 'r') as fp:
-                pass
-        except FileNotFoundError:  # never init any timeSeries file
-            with open('files/timeSeriesLastUpdate.txt', 'w') as fp:
-                fp.write(str(now))
-                timestamp = str(now)
-            with open('files/timeseries.csv', 'w') as fp:
-                fp.write(page_csv)
-
-        lastUpdate = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f")
-        differ = now - lastUpdate
-
-        # write new dataframe when more than 1 hour
-        if differ.seconds > 60 * 60 * 1:
-            with open('files/timeseries.csv', 'w') as fp:
-                fp.write(page_csv)
-            with open('files/timeSeriesLastUpdate.txt', 'w') as fp:
-                fp.write(str(now))
-
-    def getTimeSeriesPlot(self, country):
-
-        # Caplitalize country params from url
-        country = capwords(country)
-
-        try:
-            df = pd.read_csv('files/timeseries.csv', index_col=1)
-        except FileNotFoundError:
-            writeTimeSeries()
-            df = pd.read_csv('files/timeseries.csv', index_col=1)
-
-        df = df.drop(columns=['Province/State', 'Lat', 'Long'])
-
-        try:  # country appear only 1 in df
-            ct = df.loc[country, :].to_frame()
-            ct.index.name = 'Date'
-            ct = ct.reset_index()
-            ct['Date'] = pd.to_datetime(ct['Date'])
-            date = ct['Date'].to_list()
-            case = ct[country].to_list()
-
-        except AttributeError:  # appear more than 1
-            ct = df.loc[country, :]
-            ct = ct.reset_index()
-
-            aggregation_functions = {}
-            for col in ct.columns[1:]:
-                aggregation_functions[col] = 'sum'
-            ct = ct.groupby(ct['Country/Region']
-                            ).aggregate(aggregation_functions)
-
-            date = pd.to_datetime(ct.columns)
-            case = ct.loc[country, :].to_list()
-
-        fig, ax = plt.subplots(figsize=(10, 8))
-        ax.plot(date, case, linewidth=5)
-        ax.set_ylabel('Cases', fontsize=25, labelpad=20)
-        plt.xticks(fontsize=18)
-        plt.yticks(fontsize=20)
-
-        # format the Date axis
-        locator = mdates.AutoDateLocator()
-        formatter = mdates.ConciseDateFormatter(locator)
-        ax.xaxis.set_major_locator(locator)
-        ax.xaxis.set_major_formatter(formatter)
-
-        # save to html
-        tmp = BytesIO()
-        plt.savefig(tmp, format='png')
-        encoded = base64.b64encode(tmp.getvalue()).decode('utf-8')
-
-        return encoded
-
-    def getCountryPage(self, country):
-        try:
-            allDF = pd.read_csv('files/world.csv', index_col=0)
-        except FileNotFoundError:
-            writeCSV('world')
-            allDF = pd.read_csv('files/world.csv', index_col=0)
-
-        country = capwords(country)
-
-        # select only row of country
-        df = allDF.loc[country].to_frame()
-        # remove travel row if NaN
-        df.drop(['Travel'])
-
-        # try to make fontSize fit moble scren
-        if len(country) <= 5:
-            fontSize = 120
-        elif 5 < len(country) <= 8:
-            fontSize = 110
-        elif len(country) >= 10:
-            fontSize = 90
-        else:
-            fontSize = 100
-
-        df = df.style.set_properties(**{'text-align': 'center',
-                                        'border-color': 'black',
-                                        'font-size': fontSize,
-                                        'background-color': 'lightblue',
-                                        'color': 'black'})\
-            .set_table_styles([{'selector': 'th', 'props': [('font-size', fontSize)]}])\
-            .background_gradient(cmap='Blues')
-
-        # add time series plot
-        page_html = df.render()
-        page_html += "<img src=\'data:image/png;base64,{}\'> ".format(
-            self.getTimeSeriesPlot(country))
-        return '<meta charset="UTF-8">' + page_html
-
-
 class world:
 
     def getWorldData(self):
@@ -363,3 +232,134 @@ class cases:
             .background_gradient(cmap='Reds')
 
         return '<meta charset="UTF-8">' + summaryThai + df.hide_index().render()
+
+
+class page:
+    def writeTimeSeries(self):
+        url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv'
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        req = Request(url, headers=headers)
+
+        # open up connection, grap the page
+        uClient = urlopen(req)
+        page_csv = uClient.read().decode('utf-8').replace('Korea, South',
+                                                          'South Korea').replace('Taiwan*', 'Taiwan').replace('US', 'United States')
+
+        uClient.close()  # close connection
+
+        now = datetime.utcnow()
+
+        # try to get timestamp of the last update
+        try:
+            # write a timestamp of last get data
+            with open('files/timeSeriesLastUpdate.txt', 'r') as fp:
+                timestamp = fp.read()
+            with open('files/timeseries.csv', 'r') as fp:
+                pass
+        except FileNotFoundError:  # never init any timeSeries file
+            with open('files/timeSeriesLastUpdate.txt', 'w') as fp:
+                fp.write(str(now))
+                timestamp = str(now)
+            with open('files/timeseries.csv', 'w') as fp:
+                fp.write(page_csv)
+
+        lastUpdate = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f")
+        differ = now - lastUpdate
+
+        # write new dataframe when more than 1 hour
+        if differ.seconds > 60 * 60 * 1:
+            with open('files/timeseries.csv', 'w') as fp:
+                fp.write(page_csv)
+            with open('files/timeSeriesLastUpdate.txt', 'w') as fp:
+                fp.write(str(now))
+
+    def getTimeSeriesPlot(self, country):
+
+        # Caplitalize country params from url
+        country = capwords(country)
+
+        try:
+            df = pd.read_csv('files/timeseries.csv', index_col=1)
+        except FileNotFoundError:
+            writeTimeSeries()
+            df = pd.read_csv('files/timeseries.csv', index_col=1)
+
+        df = df.drop(columns=['Province/State', 'Lat', 'Long'])
+
+        try:  # country appear only 1 in df
+            ct = df.loc[country, :].to_frame()
+            ct.index.name = 'Date'
+            ct = ct.reset_index()
+            ct['Date'] = pd.to_datetime(ct['Date'])
+            date = ct['Date'].to_list()
+            case = ct[country].to_list()
+
+        except AttributeError:  # appear more than 1
+            ct = df.loc[country, :]
+            ct = ct.reset_index()
+
+            aggregation_functions = {}
+            for col in ct.columns[1:]:
+                aggregation_functions[col] = 'sum'
+            ct = ct.groupby(ct['Country/Region']
+                            ).aggregate(aggregation_functions)
+
+            date = pd.to_datetime(ct.columns)
+            case = ct.loc[country, :].to_list()
+
+        fig, ax = plt.subplots(figsize=(10, 8))
+        ax.plot(date, case, linewidth=5)
+        ax.set_ylabel('Cases', fontsize=25, labelpad=20)
+        plt.xticks(fontsize=18)
+        plt.yticks(fontsize=20)
+
+        # format the Date axis
+        locator = mdates.AutoDateLocator()
+        formatter = mdates.ConciseDateFormatter(locator)
+        ax.xaxis.set_major_locator(locator)
+        ax.xaxis.set_major_formatter(formatter)
+
+        # save to html
+        tmp = BytesIO()
+        plt.savefig(tmp, format='png')
+        encoded = base64.b64encode(tmp.getvalue()).decode('utf-8')
+
+        return encoded
+
+    def getCountryPage(self, country):
+        try:
+            allDF = pd.read_csv('files/world.csv', index_col=0)
+        except FileNotFoundError:
+            writeCSV('world')
+            allDF = pd.read_csv('files/world.csv', index_col=0)
+
+        country = capwords(country)
+
+        # select only row of country
+        df = allDF.loc[country].to_frame()
+        # remove travel row if NaN
+        df.drop(['Travel'], inplace=True)
+
+        # try to make fontSize fit moble scren
+        if len(country) <= 5:
+            fontSize = 120
+        elif 5 < len(country) <= 8:
+            fontSize = 110
+        elif len(country) >= 10:
+            fontSize = 90
+        else:
+            fontSize = 100
+
+        df = df.style.set_properties(**{'text-align': 'center',
+                                        'border-color': 'black',
+                                        'font-size': fontSize,
+                                        'background-color': 'lightblue',
+                                        'color': 'black'})\
+            .set_table_styles([{'selector': 'th', 'props': [('font-size', fontSize)]}])\
+            .background_gradient(cmap='Blues')
+
+        # add time series plot
+        page_html = df.render()
+        page_html += "<img src=\'data:image/png;base64,{}\'> ".format(
+            self.getTimeSeriesPlot(country))
+        return '<meta charset="UTF-8">' + page_html
