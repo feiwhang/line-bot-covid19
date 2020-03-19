@@ -68,11 +68,18 @@ def handle_message(event):
     input_message = event.message.text      # input message
 
     try:
-        # Rich menus
+        # Select Country Rich menus
         if input_message == 'country':
             with open('files/country.json', 'r') as fp:
                 content = json.load(fp)
             message = FlexSendMessage(alt_text='Country', contents=content)
+
+        # News Rich menus
+        elif input_message == 'news':
+            with open('files/news.json', 'r') as fp:
+                content = json.load(fp)
+            message = FlexSendMessage(alt_text='Country', contents=content)
+
         else:
             raise Exception
 

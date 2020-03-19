@@ -4,6 +4,7 @@ line-bot-sdk
 Flask
 pandas
 folium
+bs4
 matplotlib
 plotly==4.5.4
 country-converter

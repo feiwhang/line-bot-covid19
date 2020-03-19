@@ -10,6 +10,7 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import country_converter as coco
+from bs4 import BeautifulSoup as soup
 from urllib.request import Request, urlopen
 
 
@@ -347,6 +348,8 @@ class page:
             fontSize = 110
         elif len(country) >= 10:
             fontSize = 90
+        elif len(country) >= 14:
+            fontSize = 80
         else:
             fontSize = 100
 
@@ -363,3 +366,144 @@ class page:
         page_html += "<img src=\'data:image/png;base64,{}\'> ".format(
             self.getTimeSeriesPlot(country))
         return '<meta charset="UTF-8">' + page_html
+
+
+class news:
+    def newsParser(self):
+        url = "https://covid19.workpointnews.com/live-update"
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        req = Request(url, headers=headers)
+
+        # open up connection, grap the page
+        uClient = urlopen(req)
+        page_html = uClient.read()
+        uClient.close()  # close connection
+
+        # html parsing
+        pageSoup = soup(page_html, "html.parser")
+        return pageSoup
+
+    def getNewsData(self):
+        pageSoup = self.newsParser()
+
+        jsonScript = json.loads(pageSoup.find(
+            'script', type='application/json').text)
+
+        news = jsonScript['props']['pageProps']['ssrLiveUpdatePosts']
+
+        data = {}
+
+        for new in news:
+            data[new['title']] = [new['link'], new['cover']['medium']]
+
+        return data
+
+    def writeJSON(self):
+        # write a timestamp of last get data
+        with open('files/newsLastUpdate.txt', 'r') as fp:
+            timestamp = fp.read()
+
+        now = datetime.utcnow()
+        lastUpdate = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f")
+        differ = now - lastUpdate
+
+        # exit if less than 30 mins
+        if differ.seconds < 30 * 60:
+            pass
+
+        # write new timestamp
+        with open('files/newsLastUpdate.txt', 'w') as fp:
+            fp.write(str(now))
+
+        # write new JSON
+        flex = {
+            "type": "bubble",
+            "header": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "text",
+                        "text": "News",
+                        "size": "xxl",
+                        "style": "normal",
+                        "weight": "bold",
+                        "decoration": "none",
+                        "position": "relative",
+                        "align": "center",
+                        "wrap": True,
+                        "gravity": "center"
+                    }
+                ]
+            },
+            "body": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": []
+            },
+            "styles": {
+                "header": {
+                    "backgroundColor": "#fae1be"
+                },
+                "body": {
+                    "backgroundColor": "#fff1de"
+                }
+            }
+        }
+
+        data = self.getNewsData()
+
+        for new in data:
+            title = new
+            link = data[new][0]
+            picLink = data[new][1]
+
+            content = {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    {
+                        "type": "image",
+                        "url": picLink,
+                        "position": "relative",
+                        "margin": "xs",
+                        "align": "center",
+                        "gravity": "center",
+                        "size": "full",
+                        "aspectRatio": "16:9",
+                        "action": {
+                            "type": "uri",
+                            "label": "action",
+                            "uri": link
+                        },
+                        "aspectMode": "cover"
+                    },
+                    {
+                        "type": "text",
+                        "text": title,
+                        "size": "md",
+                        "weight": "bold",
+                        "style": "normal",
+                        "decoration": "none",
+                        "position": "relative",
+                        "align": "center",
+                        "gravity": "center",
+                        "action": {
+                            "type": "uri",
+                            "label": "action",
+                            "uri": link
+                        },
+                        "maxLines": 2
+                    },
+                    {
+                        "type": "spacer"
+                    }
+                ]
+            }
+
+            flex['body']['contents'].append(content)
+
+        # end loop
+        # write to JSON file
+        with open('files/news.json', 'w', encoding='utf-8') as fp:
+            fp.write(str(flex).replace('True', 'true'))
