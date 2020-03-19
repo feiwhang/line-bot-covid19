@@ -168,17 +168,29 @@ def getCasesHTML():
     df.sort_values(by='Number', ascending=False,
                    inplace=True, ignore_index=True)
 
+    # Summary of Thailand
+    thai_json = parser("https://covid19.workpointnews.com/api/constants")
+    recovered = thai_json['หายแล้ว']
+    death = thai_json['เสียชีวิต']
+    added = thai_json['เพิ่มวันนี้']
+    hospitolized = thai_json['กำลังรักษา']
+    confirmed = thai_json['ผู้ติดเชื้อ']
+    update = thai_json['เพิ่มวันที่']
+    summaryThai = '<h1> ผู้ติดเชื้อ: ' + confirmed + \
+        ' ,     กำลังรักษา: ' + hospitolized + ' ,     หายแล้ว: ' + \
+        recovered + ' ,     เสียชีวิต: ' + death + ' ,     อัพเดท: ' + update + '</h1>'
+
     # set style
     fontSize = '20pt'
     df = df.style.set_properties(**{'text-align': 'center',
-                                    'border-color': 'black',
+                                    'border-color': 'green',
                                     'font-size': fontSize,
                                     'background-color': 'lightyellow',
                                     'color': 'black'})\
         .set_table_styles([{'selector': 'th', 'props': [('font-size', fontSize)]}])\
         .background_gradient(cmap='Reds')
 
-    return '<meta charset="UTF-8">' + df.hide_index().render()
+    return '<meta charset="UTF-8">' + summaryThai + df.hide_index().render()
 
 
 def writeTimeSeries():
