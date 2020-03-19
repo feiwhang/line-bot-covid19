@@ -1,5 +1,5 @@
 import json
-from helper import getPage, getCountryPage, getStatePage
+from helper import getWorldHTML, getCasesHTML, getCountryPage
 from linebot import LineBotApi, WebhookHandler
 from flask import (Flask, abort, request, send_file)
 from linebot.exceptions import InvalidSignatureError, LineBotApiError
@@ -21,33 +21,30 @@ handler = WebhookHandler(channel_secret)
 
 @app.route('/')
 def mainPage():
-    return getPage('country')
+    return getWorldHTML()
 
 
-@app.route('/country')
-def country():
-    return getPage('country')
+@app.route('/world')
+def world():
+    return getWorldHTML()
 
 
-@app.route('/state')
-def state():
-    return getPage('state')
+@app.route('/cases')
+def cases():
+    return getCasesHTML()
 
 
-@app.route('/page/country/<country>')
+@app.route('/news')
+def news():
+    return "In development"
+
+
+@app.route('/country/<country>')
 def countryPage(country):
     try:
         return getCountryPage(country.replace('-', ' '))
     except KeyError:
         return "ไม่พบประเทศนี้"
-
-
-@app.route('/page/state/<state>')
-def statePage(state):
-    try:
-        return getStatePage(state.replace('-', ' '))
-    except KeyError:
-        return "ไม่พบเมืองนี้"
 
 
 @app.route("/callback", methods=['POST'])
@@ -71,26 +68,10 @@ def handle_message(event):
 
     try:
         # Rich menus
-        if input_message == 'location':
-            getLocation = QuickReply(items=[
-                QuickReplyButton(action=LocationAction(
-                    label="Location", text="text"))])
-            message = TextSendMessage(
-                text='กดปุ่มข้างล่างเพื่อแชร์ Location', quick_reply=getLocation)
-
-        elif input_message == 'country':
+        if input_message == 'country':
             with open('files/country.json', 'r') as fp:
                 content = json.load(fp)
             message = FlexSendMessage(alt_text='Country', contents=content)
-
-        elif input_message == 'state':
-            with open('files/state.json', 'r') as fp:
-                content = json.load(fp)
-            message = FlexSendMessage(alt_text='Country', contents=content)
-
-        elif input_message == 'news':
-            message = TextSendMessage(text='In development')
-
         else:
             raise Exception
 
