@@ -1,14 +1,15 @@
+import re
 import csv
 import json
+import folium
 import base64
-import numpy as np
 import pandas as pd
 from io import BytesIO
-
 from string import capwords
 from datetime import datetime
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+import country_converter as coco
 from urllib.request import Request, urlopen
 
 
@@ -33,23 +34,21 @@ def getCasesData():
 
     json = parser(url)
 
-    data = {'Number': [], 'Age': [], 'Gender': [],
-            'Job': [], 'Origin': [], 'Type': [],
-            'Status': [], 'Date': []}
+    data = {'Number': [], 'Job': [], 'Origin': [],
+            'Type': [], 'Status': [], 'Date': []}
 
     for case in json:
         data['Number'].append(case['number'])
-        data['Age'].append(case['age'])
-        data['Gender'].append(case['gender'])
         data['Job'].append(case['job'])
         data['Origin'].append(case['origin'])
-        data['Type'].append(case['type'])
+
+        p = re.compile(r'[0-9]{1}.{3}|[(]{1}.*?[)]{1}')
+        data['Type'].append(p.sub('', case['type']))
+
         data['Status'].append(case['status'])
         data['Date'].append(case['statementDate'])
 
     df = pd.DataFrame(data)  # convert to a dataframe
-    # convert float to int + fill age with 0 for None
-    df.iloc[:, [1]] = df.iloc[:, [1]].fillna(0).astype(int)
 
     return df
 
@@ -144,7 +143,7 @@ def getWorldHTML():
         .set_table_styles([{'selector': 'th', 'props': [('font-size', fontSize)]}])\
         .background_gradient(cmap='Reds')
 
-    return '<meta charset="UTF-8">' + df.hide_index().render()
+    return '<meta charset="UTF-8">' + getWorldMapHTML() + df.hide_index().render()
 
 
 def getCasesHTML():
@@ -179,10 +178,10 @@ def getCasesHTML():
     added = thai_json['เพิ่มวันนี้']
     hospitolized = thai_json['กำลังรักษา']
     confirmed = thai_json['ผู้ติดเชื้อ']
-    update = thai_json['เพิ่มวันที่']
+
     summaryThai = '<h1> ผู้ติดเชื้อ: ' + confirmed + \
-        ' ,   กำลังรักษา: ' + hospitolized + ' ,   หายแล้ว: ' + \
-        recovered + ' ,   เสียชีวิต: ' + death + ' ,   อัพเดท: ' + update + '</h1>'
+        ' ,  กำลังรักษา: ' + hospitolized + ' ,  หายแล้ว: ' + \
+        recovered + ' ,  เสียชีวิต: ' + death + ' , เพิ่มวันนี้: ' + added + '</h1>'
 
     # set style
     fontSize = '20pt'
@@ -305,10 +304,10 @@ def getCountryPage(country):
 
     df = df.style.set_properties(**{'text-align': 'center',
                                     'border-color': 'black',
-                                    'font-size': 115,
+                                    'font-size': 110,
                                     'background-color': 'lightblue',
                                     'color': 'black'})\
-        .set_table_styles([{'selector': 'th', 'props': [('font-size', 115)]}])\
+        .set_table_styles([{'selector': 'th', 'props': [('font-size', 110)]}])\
         .background_gradient(cmap='Blues')
 
     # add time series plot
@@ -318,6 +317,35 @@ def getCountryPage(country):
     return '<meta charset="UTF-8">' + page_html
 
 
-# print(getCountryPage('United States'))
-with open('tmp.html', 'w') as fp:
-    fp.write(getCountryPage('China'))
+def getWorldMapHTML():
+    df = pd.read_csv('files/world.csv', index_col=False)
+
+    # drop all dates except lastest
+    df.drop(df.columns[2:], axis=1, inplace=True)
+    df['Country'] = coco.convert(df['Country'].to_list(), to='ISO3')
+
+    bins = list(df['Confirmed'].quantile([0, 0.7, 0.8, 0.99, 1]))
+
+    with open('files/worldCountry.json', 'r') as j:
+        geo = json.loads(j.read())
+
+    # follium
+    m = folium.Map(location=[0, 0], zoom_start=2, width=960, height=500)
+
+    folium.Choropleth(
+        geo_data=geo,
+        name='COVID-19',
+        data=df,
+        columns=['Country', 'Confirmed'],
+        key_on='feature.id',
+        fill_color='Reds',
+        fill_opacity=1,
+        line_opacity=0.1,
+        highlight=True,
+        nan_fill_color='white',
+
+        bins=bins,
+        reset=True
+    ).add_to(m)
+
+    return m._repr_html_().replace('padding-bottom:60%;', 'padding-bottom:40%;')

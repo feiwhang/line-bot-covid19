@@ -3,6 +3,7 @@ urllib3
 line-bot-sdk
 Flask
 pandas
-numpy
+folium
 matplotlib
 plotly==4.5.4
+country-converter
