@@ -6,9 +6,59 @@
             body {
                 text-align: center;
             }
+            #confirmed { 
+                float:left;  
+                width:30%; 
+                height:250px; 
+            } 
+            #recovered{ 
+                float:left;  
+                width:30%; 
+                height:250px; 
+            } 
+            #death{ 
+                float:left; 
+                width:30%; 
+                height:250px; 
+            }
+            #spacer{ 
+                float:left; 
+                width:93%; 
+                height:50px; 
+            }
+            #table{
+                float:left; 
+            }
         </style>
     </head>
     <body>
-        {{worldPlot }} {{worldRank}}
+        {{worldPlot }} 
+
+        <div id="boxes";>
+            <div id="confirmed"; style="background-color:#f7f1df;color:black;padding:10px;border: 5px solid white;">
+                <h2 style="color:rgb(99, 40, 6); font-size: 40px;"">ผู้ติดเชื้อ</h2>
+                    <span style="color:rgb(99, 40, 6); font-size: 80px;"
+                        >1234222
+                    </span>
+            </div>
+            <div id="recovered"; style="background-color:#f7f1df;color:black;padding:10px;border: 5px solid white;">
+                <h2 style="color:rgb(99, 40, 6); font-size: 40px;"">หายแล้ว</h2>
+                    <span style="color:rgb(99, 40, 6); font-size: 80px;"
+                        >12324
+                    </span>
+            </div>
+            <div id="death"; style="background-color:#f7f1df;color:black;padding:10px;border: 5px solid white;">
+                <h2 style="color:rgb(99, 40, 6); font-size: 40px;"">เสียชีวิต</h2>
+                    <span style="color:rgb(99, 40, 6); font-size: 80px;"
+                        >123
+                    </span>
+            </div>
+        </div>
+        
+        <div id='table'>
+            {{worldRank}}
+        </div>
+        
     </body>
 </html>
+

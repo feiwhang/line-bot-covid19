@@ -1,7 +1,7 @@
 <html>
     <meta charset="UTF-8" />
     <head>
-        <title>Global COVID-19 Ranking</title>
+        <title>{{name}}</title>
         <style>
             body {
                 text-align: center;
@@ -9,7 +9,35 @@
         </style>
     </head>
     <body>
-        {{countryData}}
+        <div style="background-color:#4D85F5;color:white;padding:10px;">
+            <h1 style="color:white; font-size: 100px;"">{{name}}</h1>
+        </div>
+
+        <div style="background-color:rgb(113, 157, 245);color:white;padding:10px;">
+            <h1 style="color:white; font-size: 50px;"">ผู้ติดเชื้อ</h1>
+                <span style="color:white; font-size: 150px;"
+                    >{{confirmed}}
+                </span>
+        </div>
+
+        <div style="background-color:rgb(160, 189, 247);color:white;padding:10px;">
+            <h1 style="color:white; font-size: 35px;"">หายแล้ว</h1>
+            <div class="maincounter-number">
+                <span style="color:white; font-size: 100px;"
+                    >{{recovered}}
+                </span>
+            </div>
+        </div>
+
+        <div style="background-color:rgb(224, 93, 93);color:white;padding:10px;">
+            <h1 style="color:white; font-size: 35px;"">เสียชีวิต</h1>
+            <div class="maincounter-number">
+                <span style="color:white; font-size: 100px;"
+                    >{{death}}
+                </span>
+            </div>
+        </div>
+        
         <img src="data:image/png;base64,{{countryPlot}}" />
     </body>
 </html>

@@ -115,15 +115,23 @@ class world:
         # make Rank as one of the columns
         df.reset_index(level=0, inplace=True)
 
+        # for gradient
+        sortedRecovered = df['Recovered'].to_list()
+        sortedRecovered.sort(reverse=True)
+        sortedDeath = df['Death'].to_list()
+        sortedDeath.sort(reverse=True)
+
         # set style
         fontSize = '27pt'
         df = df.style.set_properties(**{'text-align': 'center',
                                         'border-color': 'black',
                                         'font-size': fontSize,
-                                        'background-color': 'lightyellow',
+                                        'background-color': '#f7f1df',
                                         'color': 'black'})\
             .set_table_styles([{'selector': 'th', 'props': [('font-size', fontSize)]}])\
-            .background_gradient(cmap='Reds')
+            .background_gradient(cmap='Oranges', subset='Confirmed', vmax=sum(df['Confirmed'][0:10].to_list())/10)\
+            .background_gradient(cmap='Oranges', subset='Recovered', vmax=sum(sortedRecovered[0:11])/11)\
+            .background_gradient(cmap='Oranges', subset='Death', vmax=sum(sortedDeath[0:5])/5)
 
         return df.hide_index().render()
 
@@ -225,10 +233,10 @@ class cases:
         df = df.style.set_properties(**{'text-align': 'center',
                                         'border-color': 'green',
                                         'font-size': fontSize,
-                                        'background-color': 'lightyellow',
+                                        'background-color': '#fdfff7',
                                         'color': 'black'})\
             .set_table_styles([{'selector': 'th', 'props': [('font-size', fontSize)]}])\
-            .background_gradient(cmap='Reds')
+
 
         return df.hide_index().render()
 
@@ -319,11 +327,10 @@ class country:
             date = pd.to_datetime(ct.columns)
             case = ct.loc[country, :].to_list()
 
-        fig, ax = plt.subplots(figsize=(10, 8))
+        fig, ax = plt.subplots(figsize=(9, 8))
         ax.plot(date, case, linewidth=5)
-        ax.set_ylabel('Cases', fontsize=25, labelpad=20)
         plt.xticks(fontsize=18)
-        plt.yticks(fontsize=20)
+        plt.yticks(fontsize=18)
 
         # format the Date axis
         locator = mdates.AutoDateLocator()
@@ -338,7 +345,7 @@ class country:
 
         return encoded
 
-    def getCountryHTML(self, country):
+    def getCountryData(self, country):
         try:
             allDF = pd.read_csv('files/world.csv', index_col=0)
         except FileNotFoundError:
@@ -348,31 +355,26 @@ class country:
         country = capwords(country)
 
         # select only row of country
-        df = allDF.loc[country].to_frame()
-        # remove travel row if NaN
-        df.drop(['Travel'], inplace=True)
+        df = allDF.loc[country, ['Confirmed', 'Recovered', 'Death']]
 
-        # try to make fontSize fit moble scren
-        if len(country) <= 5:
-            fontSize = 120
-        elif 5 < len(country) <= 8:
-            fontSize = 110
-        elif len(country) >= 10:
-            fontSize = 90
-        elif len(country) >= 14:
-            fontSize = 80
-        else:
-            fontSize = 100
+        return df.to_list()
 
-        df = df.style.set_properties(**{'text-align': 'center',
-                                        'border-color': 'black',
-                                        'font-size': fontSize,
-                                        'background-color': 'lightblue',
-                                        'color': 'black'})\
-            .set_table_styles([{'selector': 'th', 'props': [('font-size', fontSize)]}])\
-            .background_gradient(cmap='Blues')
+    def getEmojiName(self, country):
+        country = capwords(country)
 
-        return df.render()
+        # get emoji
+        try:
+            with open('permanentfiles/country.json', 'r') as fp:
+                data = json.load(fp)
+
+            for c in data['body']['contents']:
+                emojiName = c['action']['label']
+                print(emojiName)
+                if country in emojiName:  # found our emoji name
+                    return emojiName
+            return country
+        except Exception:
+            return country
 
 
 class news:
@@ -401,7 +403,9 @@ class news:
         data = {}
 
         for new in news:
-            data[new['title']] = [new['link'], new['cover']['medium']]
+            p = re.compile(r'&#[0-9]{4};')
+            data[p.sub(' ', new['title'])] = [
+                new['link'], new['cover']['medium']]
 
         return data
 

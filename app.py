@@ -49,11 +49,15 @@ def casesPage():
 def countryPage(name):
     c = country()
     name = name.replace('-', ' ')
-    try:
-        countryData = Markup(c.getCountryHTML(name))
-        countryPlot = c.getCountryPlot(name)
 
-        return render_template('country.html', countryData=countryData, countryPlot=countryPlot)
+    emojiName = c.getEmojiName(name)
+
+    try:
+        countryPlot = c.getCountryPlot(name)
+        countryData = c.getCountryData(name)
+
+        return render_template('country.html', confirmed=countryData[0], death=countryData[2],
+                               recovered=countryData[1], countryPlot=countryPlot, name=emojiName)
     except KeyError or Exception:
         return "ไม่พบประเทศนี้ {}".format(name)
 

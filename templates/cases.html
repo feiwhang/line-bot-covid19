@@ -9,12 +9,45 @@
         </style>
     </head>
     <body>
-        <h1>
-            ผู้ติดเชื้อ: {{confirmed}} &nbsp; เพิ่มวันนี้: {{added}}
-        </h1>
-        <h1>
-            หายแล้ว: {{recovered}} &nbsp; เสียชีวิต: {{death}}
-        </h1>
+        <div style="background-color:rgb(34, 119, 0);color:white;padding:10px;">
+            <h1 style="color:white; font-size: 50px;"">ผู้ติดเชื้อ</h1>
+                <span style="color:white; font-size: 150px;padding:10px;"
+                    >{{confirmed}}
+                </span>
+        </div>
+
+        <div style="background-color:rgb(15, 163, 72);color:white;padding:10px;">
+            <h1 style="color:white; font-size: 35px;"">เพิ่มวันนี้</h1>
+            <div class="maincounter-number">
+                <span style="color:white; font-size: 120px;padding:10px;"
+                    >{{added}}
+                </span>
+            </div>
+        </div>
+
+        <div style="background-color:rgb(144, 196, 81);color:white;padding:10px;">
+            <h1 style="color:white; font-size: 35px;"">หายแล้ว</h1>
+            <div class="maincounter-number">
+                <span style="color:white; font-size: 100px;padding:10px;"
+                    >{{recovered}}
+                </span>
+            </div>
+        </div>
+
+        <div style="background-color:#ff4f4f;color:white;padding:10px;">
+            <h1 style="color:white; font-size: 35px;"">เสียชีวิต</h1>
+            <div class="maincounter-number">
+                <span style="color:white; font-size: 100px;padding:10px;"
+                    >{{death}}
+                </span>
+            </div>
+        </div>
+
+        <h1 style="color:white; font-size: 160px;""></h1>
+
+        <div style="background-color:#fdfff7;color:white;padding:5px;border: 2px solid black;">
+            <h1 style="color:black; font-size: 40px;"">ตารางผู้ติดเชื้อ</h1>
+        </div>
         {{casesRank}}
     </body>
 </html>
