@@ -1,3 +1,5 @@
 keys/
 files/
+permanentfiles/
 __pycache__
+.gcloudignore

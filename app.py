@@ -1,7 +1,7 @@
 import json
-from helper import world, cases, page
+from helper import world, cases, country, news
 from linebot import LineBotApi, WebhookHandler
-from flask import (Flask, abort, request, send_file)
+from flask import (Flask, abort, request, send_file, render_template, Markup)
 from linebot.exceptions import InvalidSignatureError, LineBotApiError
 from linebot.models import (MessageEvent, TextMessage, TextSendMessage,
                             ImageSendMessage, QuickReply, LocationMessage,
@@ -21,31 +21,41 @@ handler = WebhookHandler(channel_secret)
 
 @app.route('/')
 def mainPage():
-    return world().getWorldHTML()
+    w = world()
+    worldPlot = Markup(w.getWorldMapHTML())
+    worldRank = Markup(w.getWorldHTML())
+    return render_template('world.html', worldPlot=worldPlot, worldRank=worldRank)
 
 
 @app.route('/world')
 def worldPage():
-    return world().getWorldHTML()
+    w = world()
+    worldPlot = Markup(w.getWorldMapHTML())
+    worldRank = Markup(w.getWorldHTML())
+    return render_template('world.html', worldPlot=worldPlot, worldRank=worldRank)
 
 
 @app.route('/cases')
 def casesPage():
-    return cases().getCasesHTML()
+    c = cases()
+    casesRank = Markup(c.getCasesHTML())
+    data = c.getCasesSummary()
+
+    return render_template('cases.html', casesRank=casesRank, confirmed=data['confirmed'], death=data['death'],
+                           recovered=data['recovered'], added=data['added'])
 
 
-@app.route('/news')
-def newsPage():
-    return "In development"
-
-
-@app.route('/country/<country>')
-def countryPage(country):
-    p = page()
+@app.route('/country/<name>')
+def countryPage(name):
+    c = country()
+    name = name.replace('-', ' ')
     try:
-        return p.getCountryPage(country.replace('-', ' '))
-    except KeyError:
-        return "ไม่พบประเทศนี้ {}".format(country.replace('-', ' '))
+        countryData = Markup(c.getCountryHTML(name))
+        countryPlot = c.getCountryPlot(name)
+
+        return render_template('country.html', countryData=countryData, countryPlot=countryPlot)
+    except KeyError or Exception:
+        return "ไม่พบประเทศนี้ {}".format(name)
 
 
 @app.route("/callback", methods=['POST'])
@@ -65,33 +75,24 @@ def callback():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    input_message = event.message.text      # input message
+    input_message = event.message.text.lower()      # input message
 
-    try:
-        # Select Country Rich menus
-        if input_message == 'country':
-            with open('files/country.json', 'r') as fp:
-                content = json.load(fp)
-            message = FlexSendMessage(alt_text='Country', contents=content)
+    # Select Country Rich menus
+    if input_message == 'country':
+        with open('permanentfiles/country.json', 'r') as fp:
+            content = json.load(fp)
+        message = FlexSendMessage(alt_text='Country', contents=content)
 
-        # News Rich menus
-        elif input_message == 'news':
-            with open('files/news.json', 'r') as fp:
-                content = json.load(fp)
-            message = FlexSendMessage(alt_text='Country', contents=content)
+    # News Rich menus
+    elif input_message == 'news':
+        content = news().getNewsJSON()
+        message = FlexSendMessage(alt_text='News', contents=content)
 
-        else:
-            raise Exception
+    else:
+        message = TextSendMessage(text='ไม่พบคำสั่ง {}'.format(
+            input_message))  # output message
 
-    except Exception:
-        message = TextSendMessage(text='คำสั่ง {}'.format(input_message))
-
-    try:
-        line_bot_api.reply_message(event.reply_token, message)
-    except LineBotApiError:  # no country
-        output_message = 'ไม่พบ {}'.format(input_message)
-        message = TextSendMessage(text=output_message)  # output message
-        line_bot_api.reply_message(event.reply_token, message)
+    line_bot_api.reply_message(event.reply_token, message)
 
 
 @handler.add(MessageEvent, message=LocationMessage)

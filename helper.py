@@ -84,23 +84,24 @@ class world:
         return df
 
     def getWorldHTML(self):
-        # write a timestamp of last get data
-        with open('files/worldLastUpdate.txt', 'r') as fp:
-            timestamp = fp.read()
-
-        now = datetime.utcnow()
-        lastUpdate = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f")
-        differ = now - lastUpdate
-
-        # write new dataframe when more than 15 mins
-        if differ.seconds > 15 * 60:
-            writeCSV('world')
-
-        # read csv to get data
         try:
+            # write a timestamp of last get data
+            with open('files/worldLastUpdate.txt', 'r') as fp:
+                timestamp = fp.read()
+
+            now = datetime.utcnow()
+            lastUpdate = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f")
+            differ = now - lastUpdate
+
+            # write new dataframe when more than 15 mins
+            if differ.seconds > 15 * 60:
+                writeCSV('world')  # timestamp get updated in here
+
+            # read csv to get data
             df = pd.read_csv('files/world.csv', index_col=False)
-        except FileNotFoundError:  # write again if not found
-            writeCSV('world')
+
+        except FileNotFoundError:  # write new if not found
+            writeCSV('world')  # timestamp get updated in here
             df = pd.read_csv('files/world.csv', index_col=False)
 
         df = df.fillna('')  # fill na with blank instead
@@ -124,10 +125,14 @@ class world:
             .set_table_styles([{'selector': 'th', 'props': [('font-size', fontSize)]}])\
             .background_gradient(cmap='Reds')
 
-        return '<meta charset="UTF-8">' + self.getWorldMapHTML() + df.hide_index().render()
+        return df.hide_index().render()
 
     def getWorldMapHTML(self):
-        df = pd.read_csv('files/world.csv', index_col=False)
+        try:
+            df = pd.read_csv('files/world.csv', index_col=False)
+        except FileNotFoundError:  # write new if not found
+            writeCSV('world')  # timestamp get updated in here
+            df = pd.read_csv('files/world.csv', index_col=False)
 
         # drop all dates except lastest
         df.drop(df.columns[2:], axis=1, inplace=True)
@@ -135,8 +140,11 @@ class world:
 
         bins = list(df['Confirmed'].quantile([0, 0.7, 0.8, 0.99, 1]))
 
-        with open('files/worldCountry.json', 'r') as j:
-            geo = json.loads(j.read())
+        try:
+            with open('permanentfiles/worldCountry.json', 'r') as j:
+                geo = json.loads(j.read())
+        except FileNotFoundError:
+            raise Exception
 
         # follium
         m = folium.Map(location=[0, 0], zoom_start=2, width=960, height=500)
@@ -168,59 +176,49 @@ class cases:
         json = parser(url)
 
         data = {'Number': [], 'Job': [], 'Origin': [],
-                'Type': [], 'Status': [], 'Date': []}
+                'Type': []}
 
         for case in json:
             data['Number'].append(case['number'])
             data['Job'].append(case['job'])
             data['Origin'].append(case['origin'])
 
-            p = re.compile(r'[0-9]{1}.{3}|[(]{1}.*?[)]{1}')
-            data['Type'].append(p.sub('', case['type']))
-
-            data['Status'].append(case['status'])
-            data['Date'].append(case['statementDate'])
+            if case['type'] == None:
+                data['Type'].append('-')
+            else:
+                # try to format type shorter
+                p = re.compile(r'[0-9]{1}.{3}|[(]{1}.*?[)]{1}')
+                data['Type'].append(p.sub('', case['type']))
 
         df = pd.DataFrame(data)  # convert to a dataframe
 
         return df
 
     def getCasesHTML(self):
-        # write a timestamp of last get data
-        with open('files/casesLastUpdate.txt', 'r') as fp:
-            timestamp = fp.read()
-
-        now = datetime.utcnow()
-        lastUpdate = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f")
-        differ = now - lastUpdate
-
-        # write new dataframe when more than 15 mins
-        if differ.seconds > 15 * 60:
-            writeCSV('cases')
-
-        # read csv to get data
         try:
+            # get a timestamp of lastUpdate data
+            with open('files/casesLastUpdate.txt', 'r') as fp:
+                timestamp = fp.read()
+
+            now = datetime.utcnow()
+            lastUpdate = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f")
+            differ = now - lastUpdate
+
+            # write new dataframe when more than 15 mins
+            if differ.seconds > 15 * 60:
+                writeCSV('cases')  # timestamp get update in here
+
+            # read csv to get data
             df = pd.read_csv('files/cases.csv', index_col=False)
-        except FileNotFoundError:  # write again if not found
-            writeCSV('cases')
+
+        except FileNotFoundError:  # write new if not found
+            writeCSV('cases')  # timestamp get update in here
             df = pd.read_csv('files/cases.csv', index_col=False)
 
         df = df.fillna('-')  # fill na with blank instead
         # Sort by Confirmed Cases
         df.sort_values(by='Number', ascending=False,
                        inplace=True, ignore_index=True)
-
-        # Summary of Thailand
-        thai_json = parser("https://covid19.workpointnews.com/api/constants")
-        recovered = thai_json['หายแล้ว']
-        death = thai_json['เสียชีวิต']
-        added = thai_json['เพิ่มวันนี้']
-        hospitolized = thai_json['กำลังรักษา']
-        confirmed = thai_json['ผู้ติดเชื้อ']
-
-        summaryThai = '<h1> ผู้ติดเชื้อ: ' + confirmed + \
-            ' ,  กำลังรักษา: ' + hospitolized + ' ,  หายแล้ว: ' + \
-            recovered + ' ,  เสียชีวิต: ' + death + ' , เพิ่มวันนี้: ' + added + '</h1>'
 
         # set style
         fontSize = '20pt'
@@ -232,11 +230,24 @@ class cases:
             .set_table_styles([{'selector': 'th', 'props': [('font-size', fontSize)]}])\
             .background_gradient(cmap='Reds')
 
-        return '<meta charset="UTF-8">' + summaryThai + df.hide_index().render()
+        return df.hide_index().render()
+
+    def getCasesSummary(self):
+        # Summary of Thailand
+        thai_json = parser("https://covid19.workpointnews.com/api/constants")
+
+        data = {}
+        data['recovered'] = thai_json['หายแล้ว']
+        data['death'] = thai_json['เสียชีวิต']
+        data['added'] = thai_json['เพิ่มวันนี้']
+        data['hospitolized'] = thai_json['กำลังรักษา']
+        data['confirmed'] = thai_json['ผู้ติดเชื้อ']
+
+        return data
 
 
-class page:
-    def writeTimeSeries(self):
+class country:
+    def writeCountryTimeSeries(self):
         url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv'
         headers = {'User-Agent': 'Mozilla/5.0'}
         req = Request(url, headers=headers)
@@ -274,7 +285,7 @@ class page:
             with open('files/timeSeriesLastUpdate.txt', 'w') as fp:
                 fp.write(str(now))
 
-    def getTimeSeriesPlot(self, country):
+    def getCountryPlot(self, country):
 
         # Caplitalize country params from url
         country = capwords(country)
@@ -282,7 +293,7 @@ class page:
         try:
             df = pd.read_csv('files/timeseries.csv', index_col=1)
         except FileNotFoundError:
-            writeTimeSeries()
+            self.writeCountryTimeSeries()
             df = pd.read_csv('files/timeseries.csv', index_col=1)
 
         df = df.drop(columns=['Province/State', 'Lat', 'Long'])
@@ -323,11 +334,11 @@ class page:
         # save to html
         tmp = BytesIO()
         plt.savefig(tmp, format='png')
-        encoded = base64.b64encode(tmp.getvalue()).decode('utf-8')
+        encoded = base64.b64encode(tmp.getvalue()).decode('ascii')
 
         return encoded
 
-    def getCountryPage(self, country):
+    def getCountryHTML(self, country):
         try:
             allDF = pd.read_csv('files/world.csv', index_col=0)
         except FileNotFoundError:
@@ -361,11 +372,7 @@ class page:
             .set_table_styles([{'selector': 'th', 'props': [('font-size', fontSize)]}])\
             .background_gradient(cmap='Blues')
 
-        # add time series plot
-        page_html = df.render()
-        page_html += "<img src=\'data:image/png;base64,{}\'> ".format(
-            self.getTimeSeriesPlot(country))
-        return '<meta charset="UTF-8">' + page_html
+        return df.render()
 
 
 class news:
@@ -398,22 +405,11 @@ class news:
 
         return data
 
-    def writeJSON(self):
-        # write a timestamp of last get data
-        with open('files/newsLastUpdate.txt', 'r') as fp:
-            timestamp = fp.read()
-
-        now = datetime.utcnow()
-        lastUpdate = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f")
-        differ = now - lastUpdate
-
-        # exit if less than 30 mins
-        if differ.seconds < 30 * 60:
-            return
+    def writeNewsJSON(self):
 
         # write new timestamp
         with open('files/newsLastUpdate.txt', 'w') as fp:
-            fp.write(str(now))
+            fp.write(str(datetime.utcnow()))
 
         # write new JSON
         flex = {
@@ -508,4 +504,32 @@ class news:
         # end loop
         # write to JSON file
         with open('files/news.json', 'w', encoding='utf-8') as fp:
-            fp.write(str(flex).replace('True', 'true'))
+            json.dump(flex, fp, ensure_ascii=False, indent=4)
+
+    def getNewsJSON(self):
+        try:
+            # read a timestamp of last get data
+            with open('files/newsLastUpdate.txt', 'r') as fp:
+                timestamp = fp.read()
+
+            now = datetime.utcnow()
+            lastUpdate = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f")
+            differ = now - lastUpdate
+
+            #  write again if more than 30 mins
+            if differ.seconds > 30 * 60:
+                self.writeJSON()
+
+            with open('files/news.json', 'r') as fp:
+                newsJSON = json.load(fp)
+
+            return newsJSON
+
+        except FileNotFoundError or json.decoder.JSONDecodeError:  # not found file
+            print('got here??')
+            self.writeNewsJSON()  # write again
+
+            with open('files/news.json', 'r') as fp:
+                newsJSON = json.load(fp)
+
+            return newsJSON
