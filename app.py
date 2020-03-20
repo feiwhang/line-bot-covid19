@@ -32,7 +32,10 @@ def worldPage():
     w = world()
     worldPlot = Markup(w.getWorldMapHTML())
     worldRank = Markup(w.getWorldHTML())
-    return render_template('world.html', worldPlot=worldPlot, worldRank=worldRank)
+    total = w.getWorldTotal()
+
+    return render_template('world.html', worldPlot=worldPlot, worldRank=worldRank, totalConfirmed=total['Confirmed'],
+                           totalRecovered=total['Recovered'], totalDeath=total['Death'])
 
 
 @app.route('/cases')

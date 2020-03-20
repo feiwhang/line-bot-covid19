@@ -175,6 +175,13 @@ class world:
 
         return m._repr_html_().replace('padding-bottom:60%;', 'padding-bottom:40%;')
 
+    def getWorldTotal(self):
+        total = pd.read_csv('files/world.csv', index_col=False)
+        total.drop(['Country', 'Travel'], axis=1, inplace=True)
+        total = total.sum().to_dict()
+
+        return total
+
 
 class cases:
 
@@ -522,7 +529,7 @@ class news:
 
             #  write again if more than 30 mins
             if differ.seconds > 30 * 60:
-                self.writeJSON()
+                self.writeNewsJSON()
 
             with open('files/news.json', 'r') as fp:
                 newsJSON = json.load(fp)

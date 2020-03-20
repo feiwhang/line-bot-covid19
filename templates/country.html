@@ -6,35 +6,50 @@
             body {
                 text-align: center;
             }
+            #confirmed { 
+                float:left;  
+                width:31%; 
+                height:250px; 
+            } 
+            #recovered{ 
+                float:left;  
+                width:31%; 
+                height:250px; 
+            } 
+            #death{ 
+                float:left; 
+                width:31%; 
+                height:250px; 
+            }
+ 
+            #table{
+                float:left; 
+            }
         </style>
     </head>
     <body>
-        <div style="background-color:#4D85F5;color:white;padding:10px;">
+        <div style="background-color:#3499eb;color:white;padding:10px;">
             <h1 style="color:white; font-size: 100px;"">{{name}}</h1>
         </div>
 
-        <div style="background-color:rgb(113, 157, 245);color:white;padding:10px;">
-            <h1 style="color:white; font-size: 50px;"">ผู้ติดเชื้อ</h1>
-                <span style="color:white; font-size: 150px;"
-                    >{{confirmed}}
-                </span>
-        </div>
-
-        <div style="background-color:rgb(160, 189, 247);color:white;padding:10px;">
-            <h1 style="color:white; font-size: 35px;"">หายแล้ว</h1>
-            <div class="maincounter-number">
-                <span style="color:white; font-size: 100px;"
-                    >{{recovered}}
-                </span>
+        <div id="boxes";>
+            <div id="confirmed"; style="background-color:#4fa3e7;color:black;padding:10px;border: 1px solid white;">
+                <h2 style="color:white; font-size: 40px;"">ผู้ติดเชื้อ</h2>
+                    <span style="color:white; font-size: 80px;"
+                        ><strong>{{confirmed}}</strong>
+                    </span>
             </div>
-        </div>
-
-        <div style="background-color:rgb(224, 93, 93);color:white;padding:10px;">
-            <h1 style="color:white; font-size: 35px;"">เสียชีวิต</h1>
-            <div class="maincounter-number">
-                <span style="color:white; font-size: 100px;"
-                    >{{death}}
-                </span>
+            <div id="recovered"; style="background-color:rgb(144, 196, 81);color:black;padding:10px;border: 1px solid white;">
+                <h2 style="color:white; font-size: 40px;"">หายแล้ว</h2>
+                    <span style="color:white; font-size: 80px;"
+                        ><strong>{{recovered}}</strong>
+                    </span>
+            </div>
+            <div id="death"; style="background-color:rgb(207, 66, 66);color:black;padding:10px;border: 1px solid white;">
+                <h2 style="color:white; font-size: 40px;"">เสียชีวิต</h2>
+                    <span style="color:white; font-size: 80px;"
+                        ><strong>{{death}}</strong>
+                    </span>
             </div>
         </div>
         
